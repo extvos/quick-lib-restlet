@@ -56,6 +56,14 @@ public class RestletConfig {
     @Value("${quick.restlet.log-trace: false}")
     private boolean logTrace;
 
+
+    /**
+     * switch for response a body result when delete success.
+     */
+    @Value("${quick.restlet.delete-response-body:false}")
+    private boolean deleteResponseBody;
+
+
     public boolean isPrettyJson() {
         return prettyJson;
     }
@@ -129,5 +137,13 @@ public class RestletConfig {
 
     public void setLogTrace(boolean logTrace) {
         this.logTrace = logTrace;
+    }
+
+    public boolean isDeleteResponseBody() {
+        return deleteResponseBody;
+    }
+
+    public void setDeleteResponseBody(boolean deleteResponseBody) {
+        this.deleteResponseBody = deleteResponseBody;
     }
 }

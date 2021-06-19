@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import org.extvos.restlet.exception.RestletException;
 import org.extvos.restlet.service.QueryBuilder;
+import org.apache.ibatis.javassist.bytecode.FieldInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Mingcai SHEN
@@ -51,12 +53,35 @@ public class QuerySet<T> implements Serializable {
         this.includeCols = includeCols;
     }
 
+    public void updateIncludeCols(Set<String> incs) {
+        if (null == incs || incs.isEmpty()) {
+            return;
+        }
+        if (null != includeCols) {
+            includeCols.addAll(incs);
+        } else {
+            includeCols = incs;
+        }
+    }
+
+
     public Set<String> getExcludeCols() {
         return excludeCols;
     }
 
     public void setExcludeCols(Set<String> excludeCols) {
         this.excludeCols = excludeCols;
+    }
+
+    public void updateExcludeCols(Set<String> excs) {
+        if (null == excs || excs.isEmpty()) {
+            return;
+        }
+        if (excludeCols != null) {
+            excludeCols.addAll(excs);
+        } else {
+            excludeCols = excs;
+        }
     }
 
     private Set<String> excludeCols;
@@ -249,6 +274,19 @@ public class QuerySet<T> implements Serializable {
             throw RestletException.badRequest("unknown column: " + ks[0]);
         }
         String field = columnMap.get(ks[0]);
+        if (null == v || v.toString().isEmpty()) {
+            return;
+        }
+        boolean fieldAccepted = false;
+        for (TableFieldInfo fieldInfo : tableInfo.getFieldList()) {
+            fieldAccepted = fieldInfo.getColumn().equals(field) || fieldInfo.getProperty().equals(field);
+            if (fieldAccepted) {
+                break;
+            }
+        }
+        if (!fieldAccepted) {
+            throw RestletException.badRequest("unknown column '" + field + "'");
+        }
         String operator;
         boolean condition = true;
         if (ks.length >= 3) {

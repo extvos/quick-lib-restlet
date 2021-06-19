@@ -79,13 +79,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class StudentServiceImpl extends BaseServiceImpl<StudentMapper, Student> implements StudentService {
-  @Autowired
-  private StudentMapper myMapper;
+    @Autowired
+    private StudentMapper myMapper;
 
-  @Override
-  public StudentMapper getMapper() {
-    return myMapper;
-  }
+    @Override
+    public StudentMapper getMapper() {
+        return myMapper;
+    }
 }
 ```
 
@@ -103,12 +103,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/students")
 public class StudentController extends BaseController<Student, StudentService> {
-  @Autowired
-  private StudentService studentService;
-  @Override
-  public StudentService getService() {
-    return studentService;
-  }
+    @Autowired
+    private StudentService studentService;
+
+    @Override
+    public StudentService getService() {
+        return studentService;
+    }
 }
 ```
 
@@ -230,7 +231,7 @@ public class StudentController extends BaseController<Student, StudentService> {
 ```yaml
 quick:
   restlet:
-    logObject-trace: true
+    log-trace: true
     page-key: __page
     page-size-key: __pageSize
     order-by-key: __orderBy
@@ -238,9 +239,10 @@ quick:
     excludes-key: __excludes
     default-page-size: 10
     pretty-json: false
+    delete-response-body: false
 ```
 
-- `logObject-trace`：指定是否在日志中输出异常信息，默认为`false`
+- `log-trace`：指定是否在日志中输出异常信息，默认为`false`
 - `page-key`：指定分页参数名，默认为`__page`
 - `page-size-key`：指定分页大小参数名，默认为`__pageSize`
 - `order-by-key`：指定排序参数名，默认为`__orderBy`
@@ -248,6 +250,7 @@ quick:
 - `excludes-key`：指定排除字段参数名，默认为`__excludes`
 - `default-page-size`：默认分页大小，默认为`50`
 - `pretty-json`：是否输出为整齐的`JSON`格式，默认为`false`则输出紧凑格式
+- `delete-response-body`: 是否在删除成功后输出一个标准Result，默认情况下删除成功后返回`204`状态值不带任何Content。
 
 ## 进阶
 
@@ -259,8 +262,8 @@ quick:
 
 ```java
 public boolean parseQuery(String k,Object v,QueryWrapper<?> wrapper){
-    return false;
-    }
+        return false;
+        }
 ```
 
 注：重写方法里面仅处理自定义的查询条件，处理了的返回`true`，未处理则返回`false`。
@@ -268,6 +271,17 @@ public boolean parseQuery(String k,Object v,QueryWrapper<?> wrapper){
 #### 更复杂的
 
 请跟着Mybatis + Mybatis-Plus走
+
+
+### 默认排除或包含字段
+
+```java
+public String[] defaultIncludes();
+public String[] defaultExcludes();
+```
+
+在`Controller`中`Override`上面连个方法，可以添加默认在查询时要包含或排除的字段，具体规则仍然如`__includes`和`__excludes`。
+
 
 ### 接口拦截处理
 

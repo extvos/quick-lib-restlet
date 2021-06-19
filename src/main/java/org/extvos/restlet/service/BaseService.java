@@ -1,9 +1,13 @@
 package org.extvos.restlet.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
 import org.extvos.restlet.QuerySet;
 import org.extvos.restlet.exception.RestletException;
+import org.apache.ibatis.annotations.Param;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +52,33 @@ public interface BaseService<T> {
     int deleteByMap(QuerySet<T> querySet) throws RestletException;
 
     /**
+     * Delete by map
+     *
+     * @param columnMap of query
+     * @return num of deleted
+     * @throws RestletException if error
+     */
+    int deleteByMap(Map<String, Object> columnMap) throws RestletException;
+
+    /**
+     * Delete by wrapper
+     *
+     * @param queryWrapper of query
+     * @return num of deleted
+     * @throws RestletException if error
+     */
+    int deleteByWrapper(Wrapper<T> queryWrapper) throws RestletException;
+
+    /**
+     * Delete by ids,
+     *
+     * @param idList of id
+     * @return num of deleted
+     * @throws RestletException if error
+     */
+    int deleteByIds(Collection<? extends Serializable> idList) throws RestletException;
+
+    /**
      * update by id
      *
      * @param id     as pk
@@ -66,6 +97,28 @@ public interface BaseService<T> {
      * @throws RestletException for failures
      */
     int updateByMap(QuerySet<T> querySet, T entity) throws RestletException;
+
+
+    /**
+     * Update by map
+     *
+     * @param columnMap of query
+     * @param entity    of object
+     * @return num ofupdated
+     * @throws RestletException when error
+     */
+    int updateByMap(Map<String, Object> columnMap, T entity) throws RestletException;
+
+
+    /**
+     * Update by wrapper
+     *
+     * @param entity        object
+     * @param updateWrapper of query
+     * @return updated records
+     * @throws RestletException if error
+     */
+    int updateByWrapper(T entity, Wrapper<T> updateWrapper) throws RestletException;
 
     /**
      * select by id
@@ -87,6 +140,25 @@ public interface BaseService<T> {
     List<T> selectByMap(QuerySet<T> querySet) throws RestletException;
 
     /**
+     * Select by map
+     *
+     * @param columnMap of query
+     * @return list
+     * @throws RestletException for failures
+     */
+    List<T> selectByMap(Map<String, Object> columnMap) throws RestletException;
+
+
+    /**
+     * Select by wrapper
+     *
+     * @param queryWrapper pf query
+     * @return list
+     * @throws RestletException for failures
+     */
+    List<T> selectByWrapper(Wrapper<T> queryWrapper) throws RestletException;
+
+    /**
      * get count of by queries
      *
      * @param querySet of queries
@@ -96,6 +168,15 @@ public interface BaseService<T> {
     Long countByMap(QuerySet<T> querySet) throws RestletException;
 
     /**
+     * Count by wrapper
+     *
+     * @param queryWrapper of query
+     * @return num
+     * @throws RestletException for failures
+     */
+    Long countByWrapper(@Param(Constants.WRAPPER) Wrapper<T> queryWrapper) throws RestletException;
+
+    /**
      * select one entity by queries
      *
      * @param querySet of queries
@@ -103,5 +184,14 @@ public interface BaseService<T> {
      * @throws RestletException for failures
      */
     T selectOne(QuerySet<T> querySet) throws RestletException;
+
+    /**
+     * Select one by wrapper
+     *
+     * @param queryWrapper of query
+     * @return null of object
+     * @throws RestletException for failures
+     */
+    T selectOne(Wrapper<T> queryWrapper) throws RestletException;
 
 }

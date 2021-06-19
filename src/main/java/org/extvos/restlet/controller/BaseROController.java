@@ -2,6 +2,7 @@ package org.extvos.restlet.controller;
 
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import org.extvos.common.Validator;
 import org.extvos.restlet.QuerySet;
 import org.extvos.restlet.Result;
 import org.extvos.restlet.config.RestletConfig;
@@ -22,10 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Mingcai SHEN
@@ -54,12 +52,11 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     }
 
     /**
+     * get the bundled base service
+     *
      * @return bundled base service.
      */
     public abstract S getService();
-//    {
-//        return baseService;
-//    }
 
     /**
      * @return bundled table info
@@ -74,73 +71,88 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     /**
      * Building a QuerySet from a map from all queries.
      *
-     * @param columnMap as queries
+     * @param columnMaps as queries
      * @return a new QuerySet
      */
-    protected final QuerySet<T> buildQuerySet(Map<String, Object> columnMap) {
-        if (this.tableInfo == null) {
-            this.tableInfo = TableInfoHelper.getTableInfo(getGenericType());
-        }
+    @SafeVarargs
+    protected final QuerySet<T> buildQuerySet(Map<String, Object>... columnMaps) {
         RestletConfig config = SpringContextHolder.getBean(RestletConfig.class);
         log.debug("buildQuerySet :> config: {}", config);
         long offset = config.getDefaultPage(), limit = config.getDefaultPageSize();
-        QuerySet<T> qs = new QuerySet<T>(tableInfo);
-        log.debug("buildQuerySet:> params: {}", columnMap);
-        if (null != columnMap) {
-            if (columnMap.containsKey(config.getPageKey())) {
-                log.debug("selectByMap: get offset:> {} {}", config.getPageKey(), columnMap.get(config.getPageKey()));
-                offset = Long.parseLong(columnMap.get(config.getPageKey()).toString());
-                columnMap.remove(config.getPageKey());
+        QuerySet<T> qs = new QuerySet<T>(getTableInfo());
+        Map<String, Object> allQueryMap = new LinkedHashMap<>();
+        for (Map<String, Object> m : columnMaps) {
+            if (Validator.notEmpty(m)) {
+                allQueryMap.putAll(m);
             }
-            if (columnMap.containsKey(config.getPageSizeKey())) {
-                log.debug("selectByMap: get offset:> {} {}", config.getPageSizeKey(), columnMap.get(config.getPageSizeKey()));
-                limit = Long.parseLong(columnMap.get(config.getPageSizeKey()).toString());
-                columnMap.remove(config.getPageSizeKey());
-                if (limit < 0) {
-                    limit = config.getDefaultPageSize();
-                }
+        }
+        log.debug("buildQuerySet:> params: {}", allQueryMap);
+        if (allQueryMap.containsKey(config.getPageKey())) {
+            log.debug("selectByMap: get offset:> {} {}", config.getPageKey(), allQueryMap.get(config.getPageKey()));
+            offset = Long.parseLong(allQueryMap.get(config.getPageKey()).toString());
+            allQueryMap.remove(config.getPageKey());
+            if (offset < 0) {
+                offset = config.getDefaultPage();
             }
+        }
+        if (allQueryMap.containsKey(config.getPageSizeKey())) {
+            log.debug("selectByMap: get offset:> {} {}", config.getPageSizeKey(), allQueryMap.get(config.getPageSizeKey()));
+            limit = Long.parseLong(allQueryMap.get(config.getPageSizeKey()).toString());
+            allQueryMap.remove(config.getPageSizeKey());
+//            if (limit < 0) {
+//                limit = config.getDefaultPageSize();
+//            }
+        }
 
-            if (columnMap.containsKey(config.getExcludesKey())) {
-                log.debug("selectByMap: get excludes:> {} {}", config.getExcludesKey(), columnMap.get(config.getExcludesKey()));
-                qs.setExcludeCols(new HashSet<>(Arrays.asList(columnMap.get(config.getExcludesKey()).toString().split(","))));
-                columnMap.remove(config.getExcludesKey());
-            }
+        if (allQueryMap.containsKey(config.getExcludesKey())) {
+            log.debug("selectByMap: get excludes:> {} {}", config.getExcludesKey(), allQueryMap.get(config.getExcludesKey()));
+            qs.setExcludeCols(new HashSet<>(Arrays.asList(allQueryMap.get(config.getExcludesKey()).toString().split(","))));
+            allQueryMap.remove(config.getExcludesKey());
+        }
 
-            if (columnMap.containsKey(config.getIncludesKey())) {
-                log.debug("selectByMap: get includes:> {} {}", config.getIncludesKey(), columnMap.get(config.getIncludesKey()));
-                qs.setIncludeCols(new HashSet<>(Arrays.asList(columnMap.get(config.getIncludesKey()).toString().split(","))));
-                columnMap.remove(config.getIncludesKey());
-            }
+        if (allQueryMap.containsKey(config.getIncludesKey())) {
+            log.debug("selectByMap: get includes:> {} {}", config.getIncludesKey(), allQueryMap.get(config.getIncludesKey()));
+            qs.setIncludeCols(new HashSet<>(Arrays.asList(allQueryMap.get(config.getIncludesKey()).toString().split(","))));
+            allQueryMap.remove(config.getIncludesKey());
+        }
 
-            if (columnMap.containsKey(config.getOrderByKey())) {
-                log.debug("selectByMap: get orderBy:> {} {}", config.getOrderByKey(), columnMap.get(config.getOrderByKey()));
-                qs.setOrderBy(new HashSet<>(Arrays.asList(columnMap.get(config.getOrderByKey()).toString().split(","))));
-                columnMap.remove(config.getOrderByKey());
-            }
+        if (allQueryMap.containsKey(config.getOrderByKey())) {
+            log.debug("selectByMap: get orderBy:> {} {}", config.getOrderByKey(), allQueryMap.get(config.getOrderByKey()));
+            qs.setOrderBy(new HashSet<>(Arrays.asList(allQueryMap.get(config.getOrderByKey()).toString().split(","))));
+            allQueryMap.remove(config.getOrderByKey());
         }
 
 //        QuerySet qs = new QuerySet(offset, limit, columnMap);
+        if (defaultIncludes() != null) {
+            qs.updateIncludeCols(new HashSet<>(Arrays.asList(defaultIncludes())));
+        }
+
+        if (defaultExcludes() != null) {
+            qs.updateExcludeCols(new HashSet<>(Arrays.asList(defaultExcludes())));
+        }
+
         qs.setPage(offset);
         qs.setPageSize(limit);
-        qs.setQueries(columnMap);
+        qs.setQueries(allQueryMap);
 
         return qs;
     }
 
 
-    @ApiOperation(value = "按查询条件查询列表", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "按查询条件查询列表", notes = "查询条件组织，请参考： https://gitlab.inodes.cn/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "__page", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__pageSize", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__orderBy", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
+            @ApiImplicitParam(name = "__page", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__pageSize", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__orderBy", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping()
-    public final Result<List<T>> selectByMap(@ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws RestletException {
-        log.debug("BaseROController<{}>::selectByMap: parameters: {}", getService().getClass().getName(), columnMap);
-        QuerySet<T> qs = buildQuerySet(columnMap);
+    public final Result<List<T>> selectByMap(
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws RestletException {
+        log.debug("BaseROController<{}>::selectByMap: parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
+        QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
         log.debug("BaseROController<{}>::selectByMap: {}", getService().getClass().getName(), qs);
         long total = getService().countByMap(qs);
@@ -151,13 +163,15 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         return Result.data(objs).paged(total, qs.getPage(), qs.getPageSize()).success();
     }
 
-    @ApiOperation(value = "{id}查询单个记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "{id}查询单个记录", notes = "查询条件组织，请参考： https://gitlab.inodes.cn/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
+            @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping("/{id:[0-9]+}")
-    public final Result<T> selectById(@PathVariable Serializable id, @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws RestletException {
+    public final Result<T> selectById(
+            @PathVariable Serializable id,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws RestletException {
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
         QuerySet<T> qs = buildQuerySet(columnMap);
         preSelect(id);
@@ -171,6 +185,13 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     }
 
     /* The following method can be overridden by extended classes */
+    public String[] defaultIncludes() {
+        return null;
+    }
+
+    public String[] defaultExcludes() {
+        return null;
+    }
 
     public void preSelect(Serializable id) throws RestletException {
 

@@ -1,5 +1,6 @@
 package org.extvos.restlet.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.extvos.restlet.QuerySet;
@@ -10,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Mingcai SHEN
@@ -77,6 +80,21 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    public int deleteByMap(Map<String, Object> columnMap) throws RestletException {
+        return getMapper().deleteByMap(columnMap);
+    }
+
+    @Override
+    public int deleteByWrapper(Wrapper<T> queryWrapper) throws RestletException {
+        return getMapper().delete(queryWrapper);
+    }
+
+    @Override
+    public int deleteByIds(Collection<? extends Serializable> idList) throws RestletException {
+        return getMapper().deleteBatchIds(idList);
+    }
+
+    @Override
     public int updateById(Serializable id, T entity) throws RestletException {
         int n = 0;
         try {
@@ -101,6 +119,20 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
             throw RestletException.internalServerError(e.getMessage());
         }
         return n;
+    }
+
+    @Override
+    public int updateByMap(Map<String, Object> columnMap, T entity) throws RestletException {
+        QueryWrapper<T> qw = new QueryWrapper<T>();
+        if (columnMap != null) {
+            columnMap.forEach(qw::eq);
+        }
+        return getMapper().update(entity, qw);
+    }
+
+    @Override
+    public int updateByWrapper(T entity, Wrapper<T> updateWrapper) throws RestletException {
+        return getMapper().update(entity, updateWrapper);
     }
 
     @Override
@@ -139,7 +171,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
                     }
                 });
             }
-            qw = qw.last("LIMIT " + querySet.getPageSize() + " OFFSET " + (querySet.getPage() * querySet.getPageSize()));
+            if (querySet.getPageSize() >= 0) {
+                qw = qw.last("LIMIT " + querySet.getPageSize() + " OFFSET " + (querySet.getPage() * querySet.getPageSize()));
+            }
             objs = getMapper().selectList(qw);
         } catch (Exception e) {
             log.error(">>", e);
@@ -149,14 +183,31 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    public List<T> selectByMap(Map<String, Object> columnMap) throws RestletException {
+        return getMapper().selectByMap(columnMap);
+    }
+
+    @Override
+    public List<T> selectByWrapper(Wrapper<T> queryWrapper) throws RestletException {
+        return getMapper().selectList(queryWrapper);
+    }
+
+    @Override
     public Long countByMap(QuerySet<T> querySet) throws RestletException {
         long n = 0L;
         try {
             n = (long) getMapper().selectCount(querySet.buildQueryWrapper(this));
+        } catch (RestletException e) {
+            throw e;
         } catch (Exception e) {
             throw RestletException.internalServerError(e.getMessage());
         }
         return n;
+    }
+
+    @Override
+    public Long countByWrapper(Wrapper<T> queryWrapper) throws RestletException {
+        return (long) getMapper().selectCount(queryWrapper);
     }
 
     @Override
@@ -173,6 +224,11 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
             throw RestletException.notFound("record not found");
         }
         return obj;
+    }
+
+    @Override
+    public T selectOne(Wrapper<T> queryWrapper) throws RestletException {
+        return getMapper().selectOne(queryWrapper);
     }
 
     @Override
