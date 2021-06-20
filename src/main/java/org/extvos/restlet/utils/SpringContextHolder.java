@@ -28,7 +28,7 @@ import java.util.List;
 
 /**
  * @author Mingcai SHEN
- * @date 2019-01-07
+ * 
  */
 public class SpringContextHolder implements ApplicationContextAware, DisposableBean {
 
