@@ -29,7 +29,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     private static final Logger log = LoggerFactory.getLogger(BaseController.class);
 
-    @ApiOperation(value = "插入一条新记录", notes = "查询条件组织，请参考： https://gitlab.inodes.cn/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "插入一条新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @PostMapping()
     @Transactional(rollbackFor = Exception.class)
     public final Result<T> insertNew(
@@ -82,7 +82,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         return updatedCols;
     }
 
-    @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://gitlab.inodes.cn/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @PutMapping(value = {"","/{id:[0-9]+}"})
     @Transactional(rollbackFor = Exception.class)
     public final Result<T> updateByMap(
@@ -127,7 +127,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         return ret;
     }
 
-//    @ApiOperation(value = "按{id}更新记录", notes = "查询条件组织，请参考： https://gitlab.inodes.cn/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+//    @ApiOperation(value = "按{id}更新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
 //    @PutMapping("/{id:[0-9]+}")
 //    @Transactional(rollbackFor = Exception.class)
 //    public final Result<T> updateById(
@@ -144,7 +144,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 //        return ret;
 //    }
 
-    @ApiOperation(value = "按条件删除记录", notes = "查询条件组织，请参考： https://gitlab.inodes.cn/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "按条件删除记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @DeleteMapping(value = {"", "/{id:[0-9]+}"})
     @Transactional(rollbackFor = Exception.class)
     public final Result<Integer> deleteByMap(
@@ -171,7 +171,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         }
     }
 
-//    @ApiOperation(value = "按{id}删除记录", notes = "查询条件组织，请参考： https://gitlab.inodes.cn/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+//    @ApiOperation(value = "按{id}删除记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
 //    @DeleteMapping("/{id:[0-9]+}")
 //    @Transactional(rollbackFor = Exception.class)
 //    public final Result<Integer> deleteById(
