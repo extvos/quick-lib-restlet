@@ -9,7 +9,7 @@
 ```xml
 
 <dependency>
-    <groupId>plus.extvos</groupId>
+    <groupId>io.github.extvos</groupId>
     <artifactId>quick-lib-restlet</artifactId>
     <version>1.0.0</version>
 </dependency>
