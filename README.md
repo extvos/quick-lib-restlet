@@ -9,7 +9,7 @@
 ```xml
 
 <dependency>
-    <groupId>org.extvos</groupId>
+    <groupId>plus.extvos</groupId>
     <artifactId>quick-lib-restlet</artifactId>
     <version>1.0.0</version>
 </dependency>
@@ -20,7 +20,7 @@
 ### `Entity` 定义
 
 ```java
-package org.extvos.example.entity;
+package plus.extvos.example.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -43,10 +43,10 @@ public class Student {
 ### `Mapper`定义
 
 ```java
-package org.extvos.example.mapper;
+package plus.extvos.example.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.extvos.example.entity.Student;
+import plus.extvos.example.entity.Student;
 
 public interface StudentMapper extends BaseMapper<Student> {
 }
@@ -56,10 +56,10 @@ public interface StudentMapper extends BaseMapper<Student> {
 ### `Service`定义
 
 ```java
-package org.extvos.example.service;
+package plus.extvos.example.service;
 
-import org.extvos.example.entity.Student;
-import org.extvos.restlet.service.BaseService;
+import plus.extvos.example.entity.Student;
+import plus.extvos.restlet.service.BaseService;
 
 public interface StudentService extends BaseService<Student> {
 }
@@ -69,12 +69,12 @@ public interface StudentService extends BaseService<Student> {
 ### `ServiceImpl`定义
 
 ```java
-package org.extvos.example.service.impl;
+package plus.extvos.example.service.impl;
 
-import org.extvos.example.entity.Student;
-import org.extvos.example.mapper.StudentMapper;
-import org.extvos.example.service.StudentService;
-import org.extvos.restlet.service.impl.BaseServiceImpl;
+import plus.extvos.example.entity.Student;
+import plus.extvos.example.mapper.StudentMapper;
+import plus.extvos.example.service.StudentService;
+import plus.extvos.restlet.service.impl.BaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -92,11 +92,11 @@ public class StudentServiceImpl extends BaseServiceImpl<StudentMapper, Student> 
 ### `Controller`定义
 
 ```java
-package org.extvos.example.controller;
+package plus.extvos.example.controller;
 
-import org.extvos.example.entity.Student;
-import org.extvos.example.service.StudentService;
-import org.extvos.restlet.controller.BaseController;
+import plus.extvos.example.entity.Student;
+import plus.extvos.example.service.StudentService;
+import plus.extvos.restlet.controller.BaseController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -312,7 +312,7 @@ public List<T> postSelect(List<T> entities)throws RestletException;
 
 以上任意方法的重写，皆可以对操作进行拦截处理或输出重写。
 
-### `org.extvos.restlet.Assert`类
+### `plus.extvos.restlet.Assert`类
 
 提供了一些基本的数据有效性断言，断言失败会抛出`RestletException`异常，亦可自定义异常。
 
@@ -332,12 +332,12 @@ public class StudentController extends BaseController<Student, StudentService> {
 }
 ```
 
-### `org.extvos.restlet.Code` 接口
+### `plus.extvos.restlet.Code` 接口
 
 定义了一个返回结果的Code接口，如`ResultCode`提供了一些基本的返回结果Code定义。如需扩展，请按照`ResultCode`的方式扩展，同时，保证`value()`返回的值除以`100`所得的数值为接口返回的`HTTP`
 状态值，且满足`HTTP`的标准定义。
 
-### `org.extvos.restlet.Result` 类
+### `plus.extvos.restlet.Result` 类
 
 是`restlet`基础的接口返回数据类型。可以在其它自实现的Controller接口中使用，以保证返回数据的格式一致性。
 
