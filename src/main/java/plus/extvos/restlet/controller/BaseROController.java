@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import plus.extvos.common.Validator;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.Result;
+import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
 import plus.extvos.restlet.exception.RestletException;
 import plus.extvos.restlet.service.BaseService;
@@ -23,21 +24,31 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.sql.ResultSet;
 import java.util.*;
 
 /**
  * @author Mingcai SHEN
  */
 public abstract class BaseROController<T, S extends BaseService<T>> {
-//    @Autowired
-//    protected S baseService;
 
-//    @Autowired
-//    protected RestletConfig config;
+    private boolean readable;
 
     protected TableInfo tableInfo;
 
     private static final Logger log = LoggerFactory.getLogger(BaseROController.class);
+
+    public BaseROController(){
+        log.debug("BaseROController:> Initializing ... {} {}", getGenericType().getName(), getGenericType().isAnnotationPresent(Restlet.class));
+        readable = true;
+        if(getGenericType().isAnnotationPresent(Restlet.class)){
+            Restlet r = getGenericType().getAnnotation(Restlet.class);
+            readable = r.readable();
+        } else if(this.getClass().isAnnotationPresent(Restlet.class)){
+            Restlet r = this.getClass().getAnnotation(Restlet.class);
+            readable = r.readable();
+        }
+    }
 
     /**
      * get the generic type which helps to get table info
@@ -194,7 +205,9 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     }
 
     public void preSelect(Serializable id) throws RestletException {
-
+        if(!readable){
+            throw RestletException.forbidden();
+        }
     }
 
     public T postSelect(T entity) throws RestletException {
@@ -207,6 +220,9 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
 
     public QuerySet<T> preSelect(QuerySet<T> qs) throws RestletException {
+        if(!readable){
+            throw RestletException.forbidden();
+        }
         return qs;
     }
 }

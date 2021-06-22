@@ -5,6 +5,7 @@ import plus.extvos.common.utils.PrimitiveConvert;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.RestletCode;
 import plus.extvos.restlet.Result;
+import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
 import plus.extvos.restlet.exception.RestletException;
 import plus.extvos.restlet.service.BaseService;
@@ -28,6 +29,26 @@ import java.util.*;
 public abstract class BaseController<T, S extends BaseService<T>> extends BaseROController<T, S> {
 
     private static final Logger log = LoggerFactory.getLogger(BaseController.class);
+
+    private boolean creatable;
+    private boolean updatable;
+    private boolean deletable;
+
+    public BaseController() {
+        super();
+        log.debug("BaseController:> Initializing ... {} {}",getGenericType().getName(), getGenericType().isAnnotationPresent(Restlet.class));
+        if(getGenericType().isAnnotationPresent(Restlet.class)){
+            Restlet r = getGenericType().getAnnotation(Restlet.class);
+            creatable = r.creatable();
+            updatable = r.updatable();
+            deletable = r.deletable();
+        } else if(this.getClass().isAnnotationPresent(Restlet.class)){
+            Restlet r = this.getClass().getAnnotation(Restlet.class);
+            creatable = r.creatable();
+            updatable = r.updatable();
+            deletable = r.deletable();
+        }
+    }
 
     @ApiOperation(value = "插入一条新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @PostMapping()
@@ -190,22 +211,36 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     /* The following method can be overridden by extended classes */
 
     public T preInsert(T entity) throws RestletException {
+        if(!creatable){
+            throw RestletException.forbidden();
+        }
         return entity;
     }
 
     public T preUpdate(Serializable id, T entity) throws RestletException {
+        if(!updatable){
+            throw RestletException.forbidden();
+        }
         return entity;
     }
 
     public T preUpdate(QuerySet<T> qs, T entity) throws RestletException {
+        if(!updatable){
+            throw RestletException.forbidden();
+        }
         return entity;
     }
 
     public void preDelete(Serializable id) throws RestletException {
-
+        if(!deletable){
+            throw RestletException.forbidden();
+        }
     }
 
     public QuerySet<T> preDelete(QuerySet<T> qs) throws RestletException {
+        if(!deletable){
+            throw RestletException.forbidden();
+        }
         return qs;
     }
 

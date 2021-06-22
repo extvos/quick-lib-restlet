@@ -7,8 +7,30 @@ import java.lang.annotation.Target;
 
 /**
  * @author Mingcai SHEN
+ *
+ * Annotates Entities with CRUD controle
  */
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Restlet {
+
+    /**
+     * If allowed to read record(s)
+     */
+    boolean readable() default true;
+
+    /**
+     * If allowed to create new record(s)
+     */
+    boolean creatable() default true;
+
+    /**
+     * If allowed to update record(s)
+     */
+    boolean updatable() default true;
+
+    /**
+     * If allowed to delete record(s)
+     */
+    boolean deletable() default true;
 }
