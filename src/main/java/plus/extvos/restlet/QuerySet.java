@@ -3,15 +3,13 @@ package plus.extvos.restlet;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
-import plus.extvos.restlet.exception.RestletException;
-import plus.extvos.restlet.service.QueryBuilder;
-import org.apache.ibatis.javassist.bytecode.FieldInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import plus.extvos.restlet.exception.RestletException;
+import plus.extvos.restlet.service.QueryBuilder;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Mingcai SHEN
