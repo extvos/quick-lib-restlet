@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * @author Mingcai SHEN
- *
+ * <p>
  * Annotates Entities with CRUD controle
  */
 @Target(ElementType.TYPE)

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -27,6 +27,7 @@ public class RestletException extends RuntimeException {
 
     /**
      * get error code
+     *
      * @return Code
      */
     public Code getCode() {
@@ -39,8 +40,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException badRequest(String ...message) {
-        return new RestletException(RestletCode.BAD_REQUEST, message.length>0?message[0]:RestletCode.BAD_REQUEST.desc());
+    public static RestletException badRequest(String... message) {
+        return new RestletException(RestletCode.BAD_REQUEST, message.length > 0 ? message[0] : RestletCode.BAD_REQUEST.desc());
     }
 
     /**
@@ -49,8 +50,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException unauthorized(String ...message) {
-        return new RestletException(RestletCode.UNAUTHORIZED, message.length>0?message[0]:RestletCode.UNAUTHORIZED.desc());
+    public static RestletException unauthorized(String... message) {
+        return new RestletException(RestletCode.UNAUTHORIZED, message.length > 0 ? message[0] : RestletCode.UNAUTHORIZED.desc());
     }
 
     /**
@@ -59,8 +60,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException forbidden(String ...message) {
-        return new RestletException(RestletCode.FORBIDDEN, message.length>0?message[0]:RestletCode.FORBIDDEN.desc());
+    public static RestletException forbidden(String... message) {
+        return new RestletException(RestletCode.FORBIDDEN, message.length > 0 ? message[0] : RestletCode.FORBIDDEN.desc());
     }
 
     /**
@@ -69,8 +70,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException notFound(String ...message) {
-        return new RestletException(RestletCode.NOT_FOUND, message.length>0?message[0]:RestletCode.NOT_FOUND.desc());
+    public static RestletException notFound(String... message) {
+        return new RestletException(RestletCode.NOT_FOUND, message.length > 0 ? message[0] : RestletCode.NOT_FOUND.desc());
     }
 
     /**
@@ -79,8 +80,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException methodNotAllowed(String ...message) {
-        return new RestletException(RestletCode.METHOD_NOT_ALLOWED, message.length>0?message[0]:RestletCode.METHOD_NOT_ALLOWED.desc());
+    public static RestletException methodNotAllowed(String... message) {
+        return new RestletException(RestletCode.METHOD_NOT_ALLOWED, message.length > 0 ? message[0] : RestletCode.METHOD_NOT_ALLOWED.desc());
     }
 
     /**
@@ -89,8 +90,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException conflict(String ...message) {
-        return new RestletException(RestletCode.CONFLICT, message.length>0?message[0]:RestletCode.CONFLICT.desc());
+    public static RestletException conflict(String... message) {
+        return new RestletException(RestletCode.CONFLICT, message.length > 0 ? message[0] : RestletCode.CONFLICT.desc());
     }
 
     /**
@@ -99,8 +100,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException internalServerError(String ...message) {
-        return new RestletException(RestletCode.INTERNAL_SERVER_ERROR, message.length>0?message[0]:RestletCode.INTERNAL_SERVER_ERROR.desc());
+    public static RestletException internalServerError(String... message) {
+        return new RestletException(RestletCode.INTERNAL_SERVER_ERROR, message.length > 0 ? message[0] : RestletCode.INTERNAL_SERVER_ERROR.desc());
     }
 
     /**
@@ -109,8 +110,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException notImplemented(String ...message) {
-        return new RestletException(RestletCode.NOT_IMPLEMENTED, message.length>0?message[0]:RestletCode.NOT_IMPLEMENTED.desc());
+    public static RestletException notImplemented(String... message) {
+        return new RestletException(RestletCode.NOT_IMPLEMENTED, message.length > 0 ? message[0] : RestletCode.NOT_IMPLEMENTED.desc());
     }
 
     /**
@@ -119,8 +120,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException badGateway(String ...message) {
-        return new RestletException(RestletCode.BAD_GATEWAY, message.length>0?message[0]:RestletCode.BAD_GATEWAY.desc());
+    public static RestletException badGateway(String... message) {
+        return new RestletException(RestletCode.BAD_GATEWAY, message.length > 0 ? message[0] : RestletCode.BAD_GATEWAY.desc());
     }
 
     /**
@@ -129,8 +130,8 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException serviceUnavailable(String ...message) {
-        return new RestletException(RestletCode.SERVICE_UNAVAILABLE, message.length>0?message[0]:RestletCode.SERVICE_UNAVAILABLE.desc());
+    public static RestletException serviceUnavailable(String... message) {
+        return new RestletException(RestletCode.SERVICE_UNAVAILABLE, message.length > 0 ? message[0] : RestletCode.SERVICE_UNAVAILABLE.desc());
     }
 
     /**
@@ -139,7 +140,7 @@ public class RestletException extends RuntimeException {
      * @param message for hint
      * @return a RestletException
      */
-    public static RestletException gatewayTimeout(String ...message) {
-        return new RestletException(RestletCode.GATEWAY_TIMEOUT, message.length>0?message[0]:RestletCode.GATEWAY_TIMEOUT.desc());
+    public static RestletException gatewayTimeout(String... message) {
+        return new RestletException(RestletCode.GATEWAY_TIMEOUT, message.length > 0 ? message[0] : RestletCode.GATEWAY_TIMEOUT.desc());
     }
 }

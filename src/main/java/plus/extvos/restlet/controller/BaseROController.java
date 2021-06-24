@@ -2,6 +2,15 @@ package plus.extvos.restlet.controller;
 
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import plus.extvos.common.Validator;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.Result;
@@ -10,21 +19,10 @@ import plus.extvos.restlet.config.RestletConfig;
 import plus.extvos.restlet.exception.RestletException;
 import plus.extvos.restlet.service.BaseService;
 import plus.extvos.restlet.utils.SpringContextHolder;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.sql.ResultSet;
 import java.util.*;
 
 /**
@@ -38,13 +36,13 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     private static final Logger log = LoggerFactory.getLogger(BaseROController.class);
 
-    public BaseROController(){
+    public BaseROController() {
         log.debug("BaseROController:> Initializing ... {} {}", getGenericType().getName(), getGenericType().isAnnotationPresent(Restlet.class));
         readable = true;
-        if(getGenericType().isAnnotationPresent(Restlet.class)){
+        if (getGenericType().isAnnotationPresent(Restlet.class)) {
             Restlet r = getGenericType().getAnnotation(Restlet.class);
             readable = r.readable();
-        } else if(this.getClass().isAnnotationPresent(Restlet.class)){
+        } else if (this.getClass().isAnnotationPresent(Restlet.class)) {
             Restlet r = this.getClass().getAnnotation(Restlet.class);
             readable = r.readable();
         }
@@ -152,16 +150,16 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     @ApiOperation(value = "按查询条件查询列表", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "__page", required = false, defaultValue = ""),
-            @ApiImplicitParam(name = "__pageSize", required = false, defaultValue = ""),
-            @ApiImplicitParam(name = "__orderBy", required = false, defaultValue = ""),
-            @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
-            @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
+        @ApiImplicitParam(name = "__page", required = false, defaultValue = ""),
+        @ApiImplicitParam(name = "__pageSize", required = false, defaultValue = ""),
+        @ApiImplicitParam(name = "__orderBy", required = false, defaultValue = ""),
+        @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
+        @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping()
     public final Result<List<T>> selectByMap(
-            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws RestletException {
+        @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws RestletException {
         log.debug("BaseROController<{}>::selectByMap: parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
@@ -176,13 +174,13 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     @ApiOperation(value = "{id}查询单个记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
-            @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
+        @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
+        @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping("/{id:[0-9]+}")
     public final Result<T> selectById(
-            @PathVariable Serializable id,
-            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws RestletException {
+        @PathVariable Serializable id,
+        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws RestletException {
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
         QuerySet<T> qs = buildQuerySet(columnMap);
         preSelect(id);
@@ -205,7 +203,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     }
 
     public void preSelect(Serializable id) throws RestletException {
-        if(!readable){
+        if (!readable) {
             throw RestletException.forbidden();
         }
     }
@@ -220,7 +218,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
 
     public QuerySet<T> preSelect(QuerySet<T> qs) throws RestletException {
-        if(!readable){
+        if (!readable) {
             throw RestletException.forbidden();
         }
         return qs;

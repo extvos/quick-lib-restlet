@@ -23,12 +23,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.Environment;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author Mingcai SHEN
- * 
  */
 public class SpringContextHolder implements ApplicationContextAware, DisposableBean {
 

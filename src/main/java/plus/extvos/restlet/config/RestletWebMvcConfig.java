@@ -1,7 +1,5 @@
 package plus.extvos.restlet.config;
 
-import plus.extvos.restlet.controller.BaseController;
-import plus.extvos.restlet.utils.SpringContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +9,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import plus.extvos.restlet.utils.SpringContextHolder;
 
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
