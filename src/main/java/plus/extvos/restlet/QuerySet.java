@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import plus.extvos.restlet.exception.RestletException;
+import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.service.QueryBuilder;
 
 import java.io.Serializable;
@@ -265,11 +265,11 @@ public class QuerySet<T> implements Serializable {
         }
     }
 
-    protected void parseQuery(String k, Object v, QueryWrapper<?> wrapper) throws RestletException {
+    protected void parseQuery(String k, Object v, QueryWrapper<?> wrapper) throws ResultException {
         String[] ks = k.split("__");
         log.debug("parseQuery > {}", k);
         if (!columnMap.containsKey(ks[0])) {
-            throw RestletException.badRequest("unknown column: " + ks[0]);
+            throw ResultException.badRequest("unknown column: " + ks[0]);
         }
         String field = columnMap.get(ks[0]);
         if (null == v || v.toString().isEmpty()) {
@@ -283,7 +283,7 @@ public class QuerySet<T> implements Serializable {
             }
         }
         if (!fieldAccepted) {
-            throw RestletException.badRequest("unknown column '" + field + "'");
+            throw ResultException.badRequest("unknown column '" + field + "'");
         }
         String operator;
         boolean condition = true;
@@ -335,7 +335,7 @@ public class QuerySet<T> implements Serializable {
                     wrapper.between(field, vs1[0], vs1[1]);
                 } else {
                     // TODO: failure ?
-                    throw RestletException.badRequest("range values need to concat with ','");
+                    throw ResultException.badRequest("range values need to concat with ','");
                 }
                 break;
             case OP_IN:
@@ -350,12 +350,12 @@ public class QuerySet<T> implements Serializable {
                 break;
             default:
                 // TODO: error ?
-                throw RestletException.badRequest("unsupported operator: " + ks[1]);
+                throw ResultException.badRequest("unsupported operator: " + ks[1]);
 
         }
     }
 
-    public QueryWrapper<T> buildQueryWrapper(QueryBuilder... qbs) throws RestletException {
+    public QueryWrapper<T> buildQueryWrapper(QueryBuilder... qbs) throws ResultException {
         QueryWrapper<T> qw = new QueryWrapper<>();
         if (queries == null) {
             return qw;

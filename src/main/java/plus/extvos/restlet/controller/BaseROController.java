@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import plus.extvos.common.Validator;
 import plus.extvos.restlet.QuerySet;
-import plus.extvos.restlet.Result;
+import plus.extvos.common.Result;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
-import plus.extvos.restlet.exception.RestletException;
+import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.service.BaseService;
-import plus.extvos.restlet.utils.SpringContextHolder;
+import plus.extvos.common.utils.SpringContextHolder;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -159,7 +159,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     @GetMapping()
     public final Result<List<T>> selectByMap(
         @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws RestletException {
+        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
         log.debug("BaseROController<{}>::selectByMap: parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
@@ -180,7 +180,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     @GetMapping("/{id:[0-9]+}")
     public final Result<T> selectById(
         @PathVariable Serializable id,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws RestletException {
+        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
         QuerySet<T> qs = buildQuerySet(columnMap);
         preSelect(id);
@@ -188,7 +188,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         entity = postSelect(entity);
         log.debug("BaseROController:>{} selectById({})", getService().getClass().getName(), entity);
         if (entity == null) {
-            throw RestletException.notFound("not found id of object");
+            throw ResultException.notFound("not found id of object");
         }
         return Result.data(entity).success();
     }
@@ -202,24 +202,24 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         return null;
     }
 
-    public void preSelect(Serializable id) throws RestletException {
+    public void preSelect(Serializable id) throws ResultException {
         if (!readable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
     }
 
-    public T postSelect(T entity) throws RestletException {
+    public T postSelect(T entity) throws ResultException {
         return entity;
     }
 
-    public List<T> postSelect(List<T> entities) throws RestletException {
+    public List<T> postSelect(List<T> entities) throws ResultException {
         return entities;
     }
 
 
-    public QuerySet<T> preSelect(QuerySet<T> qs) throws RestletException {
+    public QuerySet<T> preSelect(QuerySet<T> qs) throws ResultException {
         if (!readable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
         return qs;
     }

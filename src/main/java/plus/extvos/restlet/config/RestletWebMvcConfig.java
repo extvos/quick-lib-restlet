@@ -11,7 +11,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import plus.extvos.restlet.utils.SpringContextHolder;
+import plus.extvos.common.utils.SpringContextHolder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;

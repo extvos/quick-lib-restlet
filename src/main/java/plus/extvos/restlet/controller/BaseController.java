@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.*;
 import plus.extvos.common.Validator;
 import plus.extvos.common.utils.PrimitiveConvert;
 import plus.extvos.restlet.QuerySet;
-import plus.extvos.restlet.RestletCode;
-import plus.extvos.restlet.Result;
+import plus.extvos.common.ResultCode;
+import plus.extvos.common.Result;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
-import plus.extvos.restlet.exception.RestletException;
+import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.service.BaseService;
-import plus.extvos.restlet.utils.SpringContextHolder;
+import plus.extvos.common.utils.SpringContextHolder;
 
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
@@ -56,11 +56,11 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     @Transactional(rollbackFor = Exception.class)
     public final Result<T> insertNew(
         @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @RequestBody T record) throws RestletException {
+        @RequestBody T record) throws ResultException {
         log.debug("insertNew:> {}, {}", pathMap, record);
         record = preInsert(record);
         if (updatedCols(record) <= 0) {
-            throw RestletException.badRequest("empty values for all fields is not allowed");
+            throw ResultException.badRequest("empty values for all fields is not allowed");
         }
         if (Validator.notEmpty(pathMap)) {
             for (String k : pathMap.keySet()) {
@@ -77,7 +77,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         }
         int n = getService().insert(record);
         postInsert(record);
-        Result<T> ret = Result.data(record).success(RestletCode.CREATED);
+        Result<T> ret = Result.data(record).success(ResultCode.CREATED);
         ret.setCount((long) n);
         return ret;
     }
@@ -90,7 +90,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             }
             if (pd.getPropertyType().isPrimitive()) {
 //                updatedCols += 1;
-                throw RestletException.notImplemented("primitive property '" + pd.getName() + "' for entity is not allowed");
+                throw ResultException.notImplemented("primitive property '" + pd.getName() + "' for entity is not allowed");
 //                continue;
             }
             try {
@@ -110,10 +110,10 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     public final Result<T> updateByMap(
         @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
         @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap,
-        @RequestBody T record) throws RestletException {
+        @RequestBody T record) throws ResultException {
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         if (updatedCols(record) <= 0) {
-            throw RestletException.badRequest("no field to update");
+            throw ResultException.badRequest("no field to update");
         }
         int updated = 0;
         if (pathMap != null && pathMap.containsKey("id")) {
@@ -135,7 +135,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
                             continue;
                         }
                         if (null != pd.getReadMethod().invoke(record)) {
-                            throw RestletException.forbidden("not allowed to update '" + k + "'");
+                            throw ResultException.forbidden("not allowed to update '" + k + "'");
                         }
                     } catch (IllegalAccessException | InvocationTargetException ignored) {
                     }
@@ -171,7 +171,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     @Transactional(rollbackFor = Exception.class)
     public final Result<Integer> deleteByMap(
         @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws RestletException {
+        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         int deleted = 0;
         if (pathMap != null && pathMap.containsKey("id")) {
@@ -187,9 +187,9 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
         RestletConfig config = SpringContextHolder.getBean(RestletConfig.class);
         if (config.isDeleteResponseBody()) {
-            return Result.data(deleted).success(RestletCode.OK);
+            return Result.data(deleted).success(ResultCode.OK);
         } else {
-            return Result.data(deleted).success(RestletCode.NO_CONTENT);
+            return Result.data(deleted).success(ResultCode.NO_CONTENT);
         }
     }
 
@@ -211,57 +211,57 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     /* The following method can be overridden by extended classes */
 
-    public T preInsert(T entity) throws RestletException {
+    public T preInsert(T entity) throws ResultException {
         if (!creatable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
         return entity;
     }
 
-    public T preUpdate(Serializable id, T entity) throws RestletException {
+    public T preUpdate(Serializable id, T entity) throws ResultException {
         if (!updatable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
         return entity;
     }
 
-    public T preUpdate(QuerySet<T> qs, T entity) throws RestletException {
+    public T preUpdate(QuerySet<T> qs, T entity) throws ResultException {
         if (!updatable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
         return entity;
     }
 
-    public void preDelete(Serializable id) throws RestletException {
+    public void preDelete(Serializable id) throws ResultException {
         if (!deletable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
     }
 
-    public QuerySet<T> preDelete(QuerySet<T> qs) throws RestletException {
+    public QuerySet<T> preDelete(QuerySet<T> qs) throws ResultException {
         if (!deletable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
         return qs;
     }
 
-    public void postInsert(T entity) throws RestletException {
+    public void postInsert(T entity) throws ResultException {
 
     }
 
-    public void postUpdate(Serializable id, T entity) throws RestletException {
+    public void postUpdate(Serializable id, T entity) throws ResultException {
 
     }
 
-    public void postUpdate(QuerySet<T> qs, T entity) throws RestletException {
+    public void postUpdate(QuerySet<T> qs, T entity) throws ResultException {
 
     }
 
-    public void postDelete(Serializable id) throws RestletException {
+    public void postDelete(Serializable id) throws ResultException {
 
     }
 
-    public void postDelete(QuerySet<T> qs) throws RestletException {
+    public void postDelete(QuerySet<T> qs) throws ResultException {
 
     }
 

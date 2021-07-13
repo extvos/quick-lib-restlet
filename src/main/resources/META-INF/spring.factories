@@ -1,5 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-plus.extvos.restlet.handler.RestletResultAdvice,\
 plus.extvos.restlet.config.RestletConfig,\
-plus.extvos.restlet.config.RestletWebMvcConfig,\
-plus.extvos.restlet.aspect.LimitAspect
+plus.extvos.restlet.config.RestletWebMvcConfig
