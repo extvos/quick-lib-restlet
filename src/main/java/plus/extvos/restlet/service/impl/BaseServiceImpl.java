@@ -136,6 +136,23 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    public T selectById(Serializable id) throws ResultException {
+        T obj;
+        try {
+            QueryWrapper<T> qw = new QueryWrapper<>();
+            qw = qw.eq("id", id);
+            obj = getMapper().selectOne(qw);
+        } catch (Exception e) {
+            throw ResultException.internalServerError(e.getMessage());
+        }
+        if (null == obj) {
+            throw ResultException.notFound("record of id not found");
+        }
+        return obj;
+
+    }
+
+    @Override
     public T selectById(QuerySet<T> querySet, Serializable id) throws ResultException {
         T obj;
         try {

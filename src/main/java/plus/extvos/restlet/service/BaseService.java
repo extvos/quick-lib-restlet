@@ -130,6 +130,16 @@ public interface BaseService<T> {
      */
     T selectById(QuerySet<T> querySet, Serializable id) throws ResultException;
 
+
+    /**
+     * select by id
+     *
+     * @param id       as pk
+     * @return entity
+     * @throws ResultException for failures
+     */
+    T selectById(Serializable id) throws ResultException;
+
     /**
      * select by queries
      *
