@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import plus.extvos.common.Validator;
 import plus.extvos.common.utils.PrimitiveConvert;
@@ -15,6 +16,8 @@ import plus.extvos.common.Result;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
 import plus.extvos.common.exception.ResultException;
+import plus.extvos.restlet.intfs.OnCreate;
+import plus.extvos.restlet.intfs.OnUpdate;
 import plus.extvos.restlet.service.BaseService;
 import plus.extvos.common.utils.SpringContextHolder;
 
@@ -56,7 +59,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     @Transactional(rollbackFor = Exception.class)
     public final Result<T> insertNew(
         @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @RequestBody T record) throws ResultException {
+        @Validated(OnCreate.class) @RequestBody T record) throws ResultException {
         log.debug("insertNew:> {}, {}", pathMap, record);
         record = preInsert(record);
         if (updatedCols(record) <= 0) {
@@ -110,7 +113,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     public final Result<T> updateByMap(
         @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
         @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap,
-        @RequestBody T record) throws ResultException {
+        @Validated(OnUpdate.class) @RequestBody T record) throws ResultException {
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         if (updatedCols(record) <= 0) {
             throw ResultException.badRequest("no field to update");
