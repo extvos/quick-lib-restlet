@@ -51,12 +51,12 @@ public class DatabaseHelper {
     public String[] getTableAndView() {
         List<String> tableNames = new LinkedList<>();
         try {
-            ResultSet ts = metaData.getTables(null, "", null,
-                new String[]{"TABLE", "VIEW"});
+            ResultSet ts = metaData.getTables(null, isPostgreSQL() ? "public" : "", null,
+                    new String[]{"TABLE", "VIEW"});
             while (ts.next()) {
                 String tableName = ts.getString("TABLE_NAME");
                 log.debug(ts.getString("TABLE_NAME") + "  "
-                    + ts.getString("TABLE_TYPE"));
+                        + ts.getString("TABLE_TYPE"));
                 tableNames.add(tableName);
             }
         } catch (SQLException e) {
@@ -68,12 +68,12 @@ public class DatabaseHelper {
     public String[] getTables() {
         List<String> tableNames = new LinkedList<>();
         try {
-            ResultSet ts = metaData.getTables(null, "", null,
-                new String[]{"TABLE"});
+            ResultSet ts = metaData.getTables(null, isPostgreSQL() ? "public" : "", null,
+                    new String[]{"TABLE"});
             while (ts.next()) {
                 String tableName = ts.getString("TABLE_NAME");
                 log.debug(ts.getString("TABLE_NAME") + "  "
-                    + ts.getString("TABLE_TYPE"));
+                        + ts.getString("TABLE_TYPE"));
                 tableNames.add(tableName);
             }
         } catch (SQLException e) {
@@ -85,12 +85,12 @@ public class DatabaseHelper {
     public String[] getViews() {
         List<String> viewNames = new LinkedList<>();
         try {
-            ResultSet ts = metaData.getTables(null, "", null,
-                new String[]{"VIEW"});
+            ResultSet ts = metaData.getTables(null, isPostgreSQL() ? "public" : "", null,
+                    new String[]{"VIEW"});
             while (ts.next()) {
                 String viewName = ts.getString("TABLE_NAME");
                 log.debug(ts.getString("TABLE_NAME") + "  "
-                    + ts.getString("TABLE_TYPE"));
+                        + ts.getString("TABLE_TYPE"));
                 viewNames.add(viewName);
             }
         } catch (SQLException e) {
@@ -129,7 +129,11 @@ public class DatabaseHelper {
 
     public void runScripts(String... files) throws SQLException, IOException {
         ScriptRunner runner = new ScriptRunner(connection);
-        runner.setLogWriter(dataSource.getLogWriter());
+        try {
+            runner.setLogWriter(dataSource.getLogWriter());
+        }catch(Exception ignore){
+
+        }
         for (String path : files) {
             Reader reader = Resources.getResourceAsReader(path);
             //执行SQL脚本
@@ -152,6 +156,7 @@ public class DatabaseHelper {
     }
 
     public static DatabaseHelper with(DataSource ds) throws SQLException {
+        log.debug(">>>> with: ds :: {}", ds.getConnection().getMetaData().getDatabaseProductName());
         DatabaseHelper dh = new DatabaseHelper();
         dh.dataSource = ds;
         dh.connection = ds.getConnection();

@@ -8,10 +8,14 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import plus.extvos.common.Validator;
+import plus.extvos.logging.annotation.Log;
+import plus.extvos.logging.annotation.type.LogAction;
+import plus.extvos.logging.annotation.type.LogLevel;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.common.Result;
 import plus.extvos.restlet.annotation.Restlet;
@@ -157,17 +161,18 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping()
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic SELECT multiple rows")
     public final Result<List<T>> selectByMap(
         @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
         @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
-        log.debug("BaseROController<{}>::selectByMap: parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
+        log.debug("BaseROController<{}>::selectByMap:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
-        log.debug("BaseROController<{}>::selectByMap: {}", getService().getClass().getName(), qs);
+        log.debug("BaseROController<{}>::selectByMap:2 {}", getService().getClass().getName(), qs);
         long total = getService().countByMap(qs);
-        log.debug("BaseROController<{}>::selectByMap: total = {}", getService().getClass().getName(), total);
+        log.debug("BaseROController<{}>::selectByMap:3 total = {}", getService().getClass().getName(), total);
         List<T> objs = getService().selectByMap(qs);
-        log.debug("BaseROController<{}>::selectByMap: count = {}", getService().getClass().getName(), objs.size());
+        log.debug("BaseROController<{}>::selectByMap:4 count = {}", getService().getClass().getName(), objs.size());
         objs = postSelect(objs);
         return Result.data(objs).paged(total, qs.getPage(), qs.getPageSize()).success();
     }
@@ -178,6 +183,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping("/{id:[0-9]+}")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic Select by Id")
     public final Result<T> selectById(
         @PathVariable Serializable id,
         @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {

@@ -8,18 +8,21 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import plus.extvos.common.Validator;
-import plus.extvos.common.utils.PrimitiveConvert;
-import plus.extvos.restlet.QuerySet;
-import plus.extvos.common.ResultCode;
 import plus.extvos.common.Result;
+import plus.extvos.common.ResultCode;
+import plus.extvos.common.Validator;
+import plus.extvos.common.exception.ResultException;
+import plus.extvos.common.utils.PrimitiveConvert;
+import plus.extvos.common.utils.SpringContextHolder;
+import plus.extvos.logging.annotation.Log;
+import plus.extvos.logging.annotation.type.LogAction;
+import plus.extvos.logging.annotation.type.LogLevel;
+import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
-import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.intfs.OnCreate;
 import plus.extvos.restlet.intfs.OnUpdate;
 import plus.extvos.restlet.service.BaseService;
-import plus.extvos.common.utils.SpringContextHolder;
 
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
@@ -56,10 +59,11 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     @ApiOperation(value = "插入一条新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @PostMapping()
+    @Log(action = LogAction.CREATE, level = LogLevel.IMPORTANT, comment = "Generic CREATE")
     @Transactional(rollbackFor = Exception.class)
     public final Result<T> insertNew(
-        @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @Validated(OnCreate.class) @RequestBody T record) throws ResultException {
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @Validated(OnCreate.class) @RequestBody T record) throws ResultException {
         log.debug("insertNew:> {}, {}", pathMap, record);
         record = preInsert(record);
         if (updatedCols(record) <= 0) {
@@ -109,11 +113,12 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @PutMapping(value = {"", "/{id:[0-9]+}"})
+    @Log(action = LogAction.UPDATE, level = LogLevel.IMPORTANT,comment = "Generic UPDATE")
     @Transactional(rollbackFor = Exception.class)
     public final Result<T> updateByMap(
-        @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap,
-        @Validated(OnUpdate.class) @RequestBody T record) throws ResultException {
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap,
+            @Validated(OnUpdate.class) @RequestBody T record) throws ResultException {
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         if (updatedCols(record) <= 0) {
             throw ResultException.badRequest("no field to update");
@@ -171,10 +176,11 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     @ApiOperation(value = "按条件删除记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @DeleteMapping(value = {"", "/{id:[0-9]+}"})
+    @Log(action = LogAction.DELETE, level = LogLevel.IMPORTANT, comment = "Generic DELETE")
     @Transactional(rollbackFor = Exception.class)
     public final Result<Integer> deleteByMap(
-        @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         int deleted = 0;
         if (pathMap != null && pathMap.containsKey("id")) {
