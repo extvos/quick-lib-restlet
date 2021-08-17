@@ -112,7 +112,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     }
 
     @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
-    @PutMapping(value = {"", "/{id:[0-9]+}"})
+    @PutMapping(value = {"", "/{id}"})
     @Log(action = LogAction.UPDATE, level = LogLevel.IMPORTANT,comment = "Generic UPDATE")
     @Transactional(rollbackFor = Exception.class)
     public final Result<T> updateByMap(
@@ -127,7 +127,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         if (pathMap != null && pathMap.containsKey("id")) {
             Serializable id = pathMap.get("id").toString();
             record = preUpdate(id, record);
-            updated = getService().updateById(id, record);
+            updated = getService().updateById(convertId(id), record);
             postUpdate(id, record);
         } else {
             record = preUpdate(qs, record);
@@ -175,7 +175,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 //    }
 
     @ApiOperation(value = "按条件删除记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
-    @DeleteMapping(value = {"", "/{id:[0-9]+}"})
+    @DeleteMapping(value = {"", "/{id}"})
     @Log(action = LogAction.DELETE, level = LogLevel.IMPORTANT, comment = "Generic DELETE")
     @Transactional(rollbackFor = Exception.class)
     public final Result<Integer> deleteByMap(
@@ -186,7 +186,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         if (pathMap != null && pathMap.containsKey("id")) {
             Serializable id = pathMap.get("id").toString();
             preDelete(id);
-            deleted = getService().deleteById(id);
+            deleted = getService().deleteById(convertId(id));
             postDelete(id);
         } else {
             qs = preDelete(qs);

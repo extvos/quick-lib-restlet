@@ -182,7 +182,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
         @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
-    @GetMapping("/{id:[0-9]+}")
+    @GetMapping("/{id}")
     @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic Select by Id")
     public final Result<T> selectById(
         @PathVariable Serializable id,
@@ -190,13 +190,28 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
         QuerySet<T> qs = buildQuerySet(columnMap);
         preSelect(id);
-        T entity = getService().selectById(qs, id);
+        T entity = getService().selectById(qs, convertId(id));
         entity = postSelect(entity);
         log.debug("BaseROController:>{} selectById({})", getService().getClass().getName(), entity);
         if (entity == null) {
             throw ResultException.notFound("not found id of object");
         }
         return Result.data(entity).success();
+    }
+
+    protected Serializable convertId(Serializable id) {
+        if (Integer.class == getTableInfo().getKeyType()) {
+            return Integer.parseInt(id.toString());
+        } else if (Long.class == getTableInfo().getKeyType()) {
+            return Long.parseLong(id.toString());
+        } else {
+            return id;
+        }
+//        try {
+//            Object nid = getTableInfo().getKeyType().newInstance();
+//        } catch (InstantiationException | IllegalAccessException e) {
+//            return id;
+//        }
     }
 
     /* The following method can be overridden by extended classes */
