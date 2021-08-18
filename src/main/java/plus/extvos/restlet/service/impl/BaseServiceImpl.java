@@ -35,11 +35,11 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
      *
      * @return Class<T>
      */
-    protected Class<T> getGenericType() {
+    protected Class<?> getGenericType() {
         Type genericSuperclass = this.getClass().getGenericSuperclass();
         ParameterizedType pt = (ParameterizedType) genericSuperclass;
         Type[] actualTypeArguments = pt.getActualTypeArguments();
-        return (Class<T>) actualTypeArguments[0];
+        return (Class<?>) actualTypeArguments[1];
     }
 
     /**

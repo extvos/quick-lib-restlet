@@ -55,13 +55,13 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     /**
      * get the generic type which helps to get table info
      *
-     * @return Class<T>
+     * @return Class<?>
      */
-    protected Class<T> getGenericType() {
+    protected Class<?> getGenericType() {
         Type genericSuperclass = this.getClass().getGenericSuperclass();
         ParameterizedType pt = (ParameterizedType) genericSuperclass;
         Type[] actualTypeArguments = pt.getActualTypeArguments();
-        return (Class<T>) actualTypeArguments[0];
+        return (Class<?>) actualTypeArguments[0];
     }
 
     /**
