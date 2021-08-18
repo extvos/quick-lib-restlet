@@ -11,7 +11,11 @@ public class FieldConvertor {
     }
 
     public Object convert(Object o) {
-        if (generic == Integer.class) {
+        if (generic == Byte.class) {
+            return Byte.parseByte(o.toString());
+        } else if (generic == Short.class) {
+            return Short.parseShort(o.toString());
+        } else if (generic == Integer.class) {
             return Integer.parseInt(o.toString());
         } else if (generic == Long.class) {
             return Long.parseLong(o.toString());

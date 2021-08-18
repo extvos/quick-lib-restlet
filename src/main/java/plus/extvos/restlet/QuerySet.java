@@ -305,13 +305,13 @@ public class QuerySet<T> implements Serializable {
             operator = ks[2];
         } else if (ks.length == 2) {
             if (ks[1].equals(OP_OR)) {
-                wrapper.or().eq(field, v);
+                wrapper.or().eq(field, fcv.convert(v));
                 return;
             } else {
                 operator = ks[1];
             }
         } else {
-            wrapper.eq(field, v);
+            wrapper.eq(field, fcv.convert(v));
             return;
         }
         switch (operator) {
@@ -380,7 +380,13 @@ public class QuerySet<T> implements Serializable {
                 }
             }
             if (!done) {
-                parseQuery(entry.getKey(), entry.getValue(), qw);
+                try {
+                    parseQuery(entry.getKey(), entry.getValue(), qw);
+                } catch (ResultException e) {
+                    throw e;
+                } catch (Exception ee) {
+                    throw ResultException.badRequest("invalid query due to:" + ee.getMessage());
+                }
             }
         }
         return qw;
