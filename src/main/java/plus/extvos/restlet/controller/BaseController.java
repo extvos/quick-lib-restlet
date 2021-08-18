@@ -37,9 +37,9 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     private static final Logger log = LoggerFactory.getLogger(BaseController.class);
 
-    private boolean creatable;
-    private boolean updatable;
-    private boolean deletable;
+    private final boolean creatable;
+    private final boolean updatable;
+    private final boolean deletable;
 
     public BaseController() {
         super();
@@ -54,6 +54,10 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             creatable = r.creatable();
             updatable = r.updatable();
             deletable = r.deletable();
+        } else {
+            creatable = true;
+            updatable = true;
+            deletable = true;
         }
     }
 
@@ -157,22 +161,6 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         return ret;
     }
 
-//    @ApiOperation(value = "按{id}更新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
-//    @PutMapping("/{id:[0-9]+}")
-//    @Transactional(rollbackFor = Exception.class)
-//    public final Result<T> updateById(
-//            @PathVariable Serializable id,
-//            @RequestBody T record) throws RestletException {
-//        if (updatedCols(record) <= 0) {
-//            throw RestletException.badRequest("no field to update");
-//        }
-//        record = preUpdate(id, record);
-//        int n = getService().updateById(id, record);
-//        postUpdate(id, record);
-//        Result<T> ret = Result.data(record).success();
-//        ret.setCount((long) n);
-//        return ret;
-//    }
 
     @ApiOperation(value = "按条件删除记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
     @DeleteMapping(value = {"", "/{id}"})
@@ -201,22 +189,6 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             return Result.data(deleted).success(ResultCode.NO_CONTENT);
         }
     }
-
-//    @ApiOperation(value = "按{id}删除记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
-//    @DeleteMapping("/{id:[0-9]+}")
-//    @Transactional(rollbackFor = Exception.class)
-//    public final Result<Integer> deleteById(
-//            @PathVariable Serializable id) throws RestletException {
-//        preDelete(id);
-//        int n = getService().deleteById(id);
-//        postDelete(id);
-//        RestletConfig config = SpringContextHolder.getBean(RestletConfig.class);
-//        if (config.isDeleteResponseBody()) {
-//            return Result.data(n).success(RestletCode.OK);
-//        } else {
-//            return Result.data(n).success(RestletCode.NO_CONTENT);
-//        }
-//    }
 
     /* The following method can be overridden by extended classes */
 

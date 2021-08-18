@@ -3,6 +3,8 @@ package plus.extvos.restlet.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfo;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import plus.extvos.restlet.QuerySet;
@@ -11,6 +13,8 @@ import plus.extvos.restlet.service.BaseService;
 import plus.extvos.restlet.service.QueryBuilder;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +26,31 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
 
     private static final Logger log = LoggerFactory.getLogger(BaseServiceImpl.class);
 
+    protected TableInfo tableInfo;
 
     public abstract M getMapper();
+
+    /**
+     * get the generic type which helps to get table info
+     *
+     * @return Class<T>
+     */
+    protected Class<T> getGenericType() {
+        Type genericSuperclass = this.getClass().getGenericSuperclass();
+        ParameterizedType pt = (ParameterizedType) genericSuperclass;
+        Type[] actualTypeArguments = pt.getActualTypeArguments();
+        return (Class<T>) actualTypeArguments[0];
+    }
+
+    /**
+     * @return bundled table info
+     */
+    public TableInfo getTableInfo() {
+        if (this.tableInfo == null) {
+            this.tableInfo = TableInfoHelper.getTableInfo(getGenericType());
+        }
+        return this.tableInfo;
+    }
 
     @Override
     public int insert(T entity) throws ResultException {
@@ -99,7 +126,8 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         int n = 0;
         try {
             QueryWrapper<T> qw = new QueryWrapper<T>();
-            qw = qw.eq("id", id);
+//            qw = qw.eq("id", id);
+            qw = qw.eq(getTableInfo().getKeyColumn(), id);
             n = getMapper().update(entity, qw);
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
@@ -140,7 +168,8 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         T obj;
         try {
             QueryWrapper<T> qw = new QueryWrapper<>();
-            qw = qw.eq("id", id);
+//            qw = qw.eq("id", id);
+            qw = qw.eq(getTableInfo().getKeyColumn(), id);
             obj = getMapper().selectOne(qw);
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
@@ -160,7 +189,8 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
             if (querySet != null) {
                 qw = qw.select(querySet.columns().toArray(new String[0]));
             }
-            qw = qw.eq("id", id);
+//            qw = qw.eq("id", id);
+            qw = qw.eq(getTableInfo().getKeyColumn(), id);
             obj = getMapper().selectOne(qw);
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());

@@ -7,9 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.service.QueryBuilder;
+import plus.extvos.restlet.utils.FieldConvertor;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Mingcai SHEN
@@ -86,6 +88,7 @@ public class QuerySet<T> implements Serializable {
 
     private TableInfo tableInfo;
     private Map<String, String> columnMap;
+    private Map<String, Class<?>> columnTypeMap;
 
     public Set<String> columns() {
         if (includeCols != null && includeCols.size() > 0) {
@@ -153,11 +156,14 @@ public class QuerySet<T> implements Serializable {
         this.tableInfo = tableInfo;
         if (this.tableInfo != null) {
             columnMap = new LinkedHashMap<>();
+            columnTypeMap = new LinkedHashMap<>();
             columnMap.put(tableInfo.getKeyColumn(), tableInfo.getKeyColumn());
             columnMap.put(tableInfo.getKeyProperty(), tableInfo.getKeyColumn());
+            columnTypeMap.put(tableInfo.getKeyColumn(), tableInfo.getKeyType());
             tableInfo.getFieldList().forEach((TableFieldInfo f) -> {
                 columnMap.put(f.getProperty(), f.getColumn());
                 columnMap.put(f.getColumn(), f.getColumn());
+                columnTypeMap.put(f.getColumn(), f.getPropertyType());
             });
         }
     }
@@ -275,16 +281,21 @@ public class QuerySet<T> implements Serializable {
         if (null == v || v.toString().isEmpty()) {
             return;
         }
-        boolean fieldAccepted = false;
-        for (TableFieldInfo fieldInfo : tableInfo.getFieldList()) {
-            fieldAccepted = fieldInfo.getColumn().equals(field) || fieldInfo.getProperty().equals(field);
-            if (fieldAccepted) {
-                break;
-            }
+        Class<?> fieldType = columnTypeMap.get(field);
+        if (null == fieldType) {
+            throw ResultException.internalServerError("can not get type of column: " + ks[0]);
         }
-        if (!fieldAccepted) {
-            throw ResultException.badRequest("unknown column '" + field + "'");
-        }
+        FieldConvertor fcv = new FieldConvertor(fieldType);
+//        boolean fieldAccepted = false;
+//        for (TableFieldInfo fieldInfo : tableInfo.getFieldList()) {
+//            fieldAccepted = fieldInfo.getColumn().equals(field) || fieldInfo.getProperty().equals(field);
+//            if (fieldAccepted) {
+//                break;
+//            }
+//        }
+//        if (!fieldAccepted) {
+//            throw ResultException.badRequest("unknown column '" + field + "'");
+//        }
         String operator;
         boolean condition = true;
         if (ks.length >= 3) {
@@ -314,33 +325,33 @@ public class QuerySet<T> implements Serializable {
                 wrapper.likeLeft(field, v);
                 break;
             case OP_NOT:
-                wrapper.ne(field, v);
+                wrapper.ne(field, fcv.convert(v));
                 break;
             case OP_GT:
-                wrapper.gt(ks[0], v);
+                wrapper.gt(ks[0], fcv.convert(v));
                 break;
             case OP_GTE:
-                wrapper.ge(field, v);
+                wrapper.ge(field, fcv.convert(v));
                 break;
             case OP_LT:
-                wrapper.lt(field, v);
+                wrapper.lt(field, fcv.convert(v));
                 break;
             case OP_LTE:
-                wrapper.le(field, v);
+                wrapper.le(field, fcv.convert(v));
                 break;
             case OP_RANGE:
             case OP_BETWEEN:
                 String[] vs1 = v.toString().split(",", 2);
                 if (vs1.length > 1) {
-                    wrapper.between(field, vs1[0], vs1[1]);
+                    wrapper.between(field, fcv.convert(vs1[0]), fcv.convert(vs1[1]));
                 } else {
                     // TODO: failure ?
                     throw ResultException.badRequest("range values need to concat with ','");
                 }
                 break;
             case OP_IN:
-                String[] vs2 = v.toString().split(",");
-                wrapper.in(field, Arrays.asList(vs2));
+                List<?> vs2 = Arrays.stream(v.toString().split(",")).map(fcv::convert).collect(Collectors.toList());
+                wrapper.in(field, vs2);
                 break;
             case OP_ISNULL:
                 wrapper.isNull(field);
