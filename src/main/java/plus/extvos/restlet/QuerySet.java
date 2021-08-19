@@ -126,7 +126,18 @@ public class QuerySet<T> implements Serializable {
     }
 
     public void setOrderBy(Set<String> orderBy) {
-        this.orderBy = orderBy;
+        this.orderBy = orderBy.stream().map(s -> {
+            String ss = s;
+            String ps = "";
+            if (s.startsWith("-")) {
+                ps = "-";
+                ss = s.substring(1);
+            }
+            if (columnMap.containsKey(ss)) {
+                ss = columnMap.get(ss);
+            }
+            return ps + ss;
+        }).collect(Collectors.toSet());
     }
 
     public QuerySet(TableInfo tableInfo) {
