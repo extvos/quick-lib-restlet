@@ -37,7 +37,12 @@
             <artifactId>spring-boot-starter-jdbc</artifactId>
             <version>${springboot.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <version>${springboot.version}</version>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
