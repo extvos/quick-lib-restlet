@@ -60,7 +60,8 @@ public class DatabaseHelper {
                 tableNames.add(tableName);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(">>", e);
+
         }
         return tableNames.toArray(new String[0]);
     }
@@ -77,7 +78,8 @@ public class DatabaseHelper {
                 tableNames.add(tableName);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(">>", e);
+
         }
         return tableNames.toArray(new String[0]);
     }
@@ -94,7 +96,8 @@ public class DatabaseHelper {
                 viewNames.add(viewName);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(">>", e);
+
         }
         return viewNames.toArray(new String[0]);
     }

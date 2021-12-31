@@ -82,7 +82,8 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
                     }
                     pd.getWriteMethod().invoke(record, PrimitiveConvert.from(pathMap.get(k).toString()).to(pd.getPropertyType()));
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    log.error(">>", e);
+//                    e.printStackTrace();
                 }
             }
         }
