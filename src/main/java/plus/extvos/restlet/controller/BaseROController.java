@@ -8,17 +8,21 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import plus.extvos.common.Validator;
+import plus.extvos.logging.annotation.Log;
+import plus.extvos.logging.annotation.type.LogAction;
+import plus.extvos.logging.annotation.type.LogLevel;
 import plus.extvos.restlet.QuerySet;
-import plus.extvos.restlet.Result;
+import plus.extvos.common.Result;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
-import plus.extvos.restlet.exception.RestletException;
+import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.service.BaseService;
-import plus.extvos.restlet.utils.SpringContextHolder;
+import plus.extvos.common.utils.SpringContextHolder;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -51,13 +55,13 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     /**
      * get the generic type which helps to get table info
      *
-     * @return Class<T>
+     * @return Class<?>
      */
-    protected Class<T> getGenericType() {
+    protected Class<?> getGenericType() {
         Type genericSuperclass = this.getClass().getGenericSuperclass();
         ParameterizedType pt = (ParameterizedType) genericSuperclass;
         Type[] actualTypeArguments = pt.getActualTypeArguments();
-        return (Class<T>) actualTypeArguments[0];
+        return (Class<?>) actualTypeArguments[0];
     }
 
     /**
@@ -157,17 +161,18 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping()
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic SELECT multiple rows")
     public final Result<List<T>> selectByMap(
         @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws RestletException {
-        log.debug("BaseROController<{}>::selectByMap: parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
+        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        log.debug("BaseROController<{}>::selectByMap:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
-        log.debug("BaseROController<{}>::selectByMap: {}", getService().getClass().getName(), qs);
+        log.debug("BaseROController<{}>::selectByMap:2 {}", getService().getClass().getName(), qs);
         long total = getService().countByMap(qs);
-        log.debug("BaseROController<{}>::selectByMap: total = {}", getService().getClass().getName(), total);
+        log.debug("BaseROController<{}>::selectByMap:3 total = {}", getService().getClass().getName(), total);
         List<T> objs = getService().selectByMap(qs);
-        log.debug("BaseROController<{}>::selectByMap: count = {}", getService().getClass().getName(), objs.size());
+        log.debug("BaseROController<{}>::selectByMap:4 count = {}", getService().getClass().getName(), objs.size());
         objs = postSelect(objs);
         return Result.data(objs).paged(total, qs.getPage(), qs.getPageSize()).success();
     }
@@ -177,20 +182,36 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
         @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
-    @GetMapping("/{id:[0-9]+}")
+    @GetMapping("/{id}")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic Select by Id")
     public final Result<T> selectById(
         @PathVariable Serializable id,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws RestletException {
+        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
         QuerySet<T> qs = buildQuerySet(columnMap);
         preSelect(id);
-        T entity = getService().selectById(qs, id);
+        T entity = getService().selectById(qs, convertId(id));
         entity = postSelect(entity);
         log.debug("BaseROController:>{} selectById({})", getService().getClass().getName(), entity);
         if (entity == null) {
-            throw RestletException.notFound("not found id of object");
+            throw ResultException.notFound("not found id of object");
         }
         return Result.data(entity).success();
+    }
+
+    protected Serializable convertId(Serializable id) {
+        if (Integer.class == getTableInfo().getKeyType()) {
+            return Integer.parseInt(id.toString());
+        } else if (Long.class == getTableInfo().getKeyType()) {
+            return Long.parseLong(id.toString());
+        } else {
+            return id;
+        }
+//        try {
+//            Object nid = getTableInfo().getKeyType().newInstance();
+//        } catch (InstantiationException | IllegalAccessException e) {
+//            return id;
+//        }
     }
 
     /* The following method can be overridden by extended classes */
@@ -202,24 +223,24 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         return null;
     }
 
-    public void preSelect(Serializable id) throws RestletException {
+    public void preSelect(Serializable id) throws ResultException {
         if (!readable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
     }
 
-    public T postSelect(T entity) throws RestletException {
+    public T postSelect(T entity) throws ResultException {
         return entity;
     }
 
-    public List<T> postSelect(List<T> entities) throws RestletException {
+    public List<T> postSelect(List<T> entities) throws ResultException {
         return entities;
     }
 
 
-    public QuerySet<T> preSelect(QuerySet<T> qs) throws RestletException {
+    public QuerySet<T> preSelect(QuerySet<T> qs) throws ResultException {
         if (!readable) {
-            throw RestletException.forbidden();
+            throw ResultException.forbidden();
         }
         return qs;
     }

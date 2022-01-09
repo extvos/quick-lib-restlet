@@ -312,7 +312,7 @@ public List<T> postSelect(List<T> entities)throws RestletException;
 
 以上任意方法的重写，皆可以对操作进行拦截处理或输出重写。
 
-### `plus.extvos.restlet.Assert`类
+### `plus.extvos.common.Assert`类
 
 提供了一些基本的数据有效性断言，断言失败会抛出`RestletException`异常，亦可自定义异常。
 
@@ -332,12 +332,12 @@ public class StudentController extends BaseController<Student, StudentService> {
 }
 ```
 
-### `plus.extvos.restlet.Code` 接口
+### `plus.extvos.common.Code` 接口
 
 定义了一个返回结果的Code接口，如`ResultCode`提供了一些基本的返回结果Code定义。如需扩展，请按照`ResultCode`的方式扩展，同时，保证`value()`返回的值除以`100`所得的数值为接口返回的`HTTP`
 状态值，且满足`HTTP`的标准定义。
 
-### `plus.extvos.restlet.Result` 类
+### `plus.extvos.common.Result` 类
 
 是`restlet`基础的接口返回数据类型。可以在其它自实现的Controller接口中使用，以保证返回数据的格式一致性。
 

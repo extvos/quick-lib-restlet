@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import plus.extvos.restlet.exception.RestletException;
+import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.service.QueryBuilder;
+import plus.extvos.restlet.utils.FieldConvertor;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Mingcai SHEN
@@ -86,6 +88,7 @@ public class QuerySet<T> implements Serializable {
 
     private TableInfo tableInfo;
     private Map<String, String> columnMap;
+    private Map<String, Class<?>> columnTypeMap;
 
     public Set<String> columns() {
         if (includeCols != null && includeCols.size() > 0) {
@@ -123,7 +126,18 @@ public class QuerySet<T> implements Serializable {
     }
 
     public void setOrderBy(Set<String> orderBy) {
-        this.orderBy = orderBy;
+        this.orderBy = orderBy.stream().map(s -> {
+            String ss = s;
+            String ps = "";
+            if (s.startsWith("-")) {
+                ps = "-";
+                ss = s.substring(1);
+            }
+            if (columnMap.containsKey(ss)) {
+                ss = columnMap.get(ss);
+            }
+            return ps + ss;
+        }).collect(Collectors.toSet());
     }
 
     public QuerySet(TableInfo tableInfo) {
@@ -153,11 +167,14 @@ public class QuerySet<T> implements Serializable {
         this.tableInfo = tableInfo;
         if (this.tableInfo != null) {
             columnMap = new LinkedHashMap<>();
+            columnTypeMap = new LinkedHashMap<>();
             columnMap.put(tableInfo.getKeyColumn(), tableInfo.getKeyColumn());
             columnMap.put(tableInfo.getKeyProperty(), tableInfo.getKeyColumn());
+            columnTypeMap.put(tableInfo.getKeyColumn(), tableInfo.getKeyType());
             tableInfo.getFieldList().forEach((TableFieldInfo f) -> {
                 columnMap.put(f.getProperty(), f.getColumn());
                 columnMap.put(f.getColumn(), f.getColumn());
+                columnTypeMap.put(f.getColumn(), f.getPropertyType());
             });
         }
     }
@@ -265,26 +282,31 @@ public class QuerySet<T> implements Serializable {
         }
     }
 
-    protected void parseQuery(String k, Object v, QueryWrapper<?> wrapper) throws RestletException {
+    protected void parseQuery(String k, Object v, QueryWrapper<?> wrapper) throws ResultException {
         String[] ks = k.split("__");
         log.debug("parseQuery > {}", k);
         if (!columnMap.containsKey(ks[0])) {
-            throw RestletException.badRequest("unknown column: " + ks[0]);
+            throw ResultException.badRequest("unknown column: " + ks[0]);
         }
         String field = columnMap.get(ks[0]);
         if (null == v || v.toString().isEmpty()) {
             return;
         }
-        boolean fieldAccepted = false;
-        for (TableFieldInfo fieldInfo : tableInfo.getFieldList()) {
-            fieldAccepted = fieldInfo.getColumn().equals(field) || fieldInfo.getProperty().equals(field);
-            if (fieldAccepted) {
-                break;
-            }
+        Class<?> fieldType = columnTypeMap.get(field);
+        if (null == fieldType) {
+            throw ResultException.internalServerError("can not get type of column: " + ks[0]);
         }
-        if (!fieldAccepted) {
-            throw RestletException.badRequest("unknown column '" + field + "'");
-        }
+        FieldConvertor fcv = new FieldConvertor(fieldType);
+//        boolean fieldAccepted = false;
+//        for (TableFieldInfo fieldInfo : tableInfo.getFieldList()) {
+//            fieldAccepted = fieldInfo.getColumn().equals(field) || fieldInfo.getProperty().equals(field);
+//            if (fieldAccepted) {
+//                break;
+//            }
+//        }
+//        if (!fieldAccepted) {
+//            throw ResultException.badRequest("unknown column '" + field + "'");
+//        }
         String operator;
         boolean condition = true;
         if (ks.length >= 3) {
@@ -294,13 +316,13 @@ public class QuerySet<T> implements Serializable {
             operator = ks[2];
         } else if (ks.length == 2) {
             if (ks[1].equals(OP_OR)) {
-                wrapper.or().eq(field, v);
+                wrapper.or().eq(field, fcv.convert(v));
                 return;
             } else {
                 operator = ks[1];
             }
         } else {
-            wrapper.eq(field, v);
+            wrapper.eq(field, fcv.convert(v));
             return;
         }
         switch (operator) {
@@ -314,33 +336,33 @@ public class QuerySet<T> implements Serializable {
                 wrapper.likeLeft(field, v);
                 break;
             case OP_NOT:
-                wrapper.ne(field, v);
+                wrapper.ne(field, fcv.convert(v));
                 break;
             case OP_GT:
-                wrapper.gt(ks[0], v);
+                wrapper.gt(ks[0], fcv.convert(v));
                 break;
             case OP_GTE:
-                wrapper.ge(field, v);
+                wrapper.ge(field, fcv.convert(v));
                 break;
             case OP_LT:
-                wrapper.lt(field, v);
+                wrapper.lt(field, fcv.convert(v));
                 break;
             case OP_LTE:
-                wrapper.le(field, v);
+                wrapper.le(field, fcv.convert(v));
                 break;
             case OP_RANGE:
             case OP_BETWEEN:
                 String[] vs1 = v.toString().split(",", 2);
                 if (vs1.length > 1) {
-                    wrapper.between(field, vs1[0], vs1[1]);
+                    wrapper.between(field, fcv.convert(vs1[0]), fcv.convert(vs1[1]));
                 } else {
                     // TODO: failure ?
-                    throw RestletException.badRequest("range values need to concat with ','");
+                    throw ResultException.badRequest("range values need to concat with ','");
                 }
                 break;
             case OP_IN:
-                String[] vs2 = v.toString().split(",");
-                wrapper.in(field, Arrays.asList(vs2));
+                List<?> vs2 = Arrays.stream(v.toString().split(",")).map(fcv::convert).collect(Collectors.toList());
+                wrapper.in(field, vs2);
                 break;
             case OP_ISNULL:
                 wrapper.isNull(field);
@@ -350,12 +372,12 @@ public class QuerySet<T> implements Serializable {
                 break;
             default:
                 // TODO: error ?
-                throw RestletException.badRequest("unsupported operator: " + ks[1]);
+                throw ResultException.badRequest("unsupported operator: " + ks[1]);
 
         }
     }
 
-    public QueryWrapper<T> buildQueryWrapper(QueryBuilder... qbs) throws RestletException {
+    public QueryWrapper<T> buildQueryWrapper(QueryBuilder... qbs) throws ResultException {
         QueryWrapper<T> qw = new QueryWrapper<>();
         if (queries == null) {
             return qw;
@@ -369,7 +391,13 @@ public class QuerySet<T> implements Serializable {
                 }
             }
             if (!done) {
-                parseQuery(entry.getKey(), entry.getValue(), qw);
+                try {
+                    parseQuery(entry.getKey(), entry.getValue(), qw);
+                } catch (ResultException e) {
+                    throw e;
+                } catch (Exception ee) {
+                    throw ResultException.badRequest("invalid query due to:" + ee.getMessage());
+                }
             }
         }
         return qw;
