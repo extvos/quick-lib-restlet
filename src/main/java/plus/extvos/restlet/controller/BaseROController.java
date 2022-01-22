@@ -152,7 +152,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     }
 
 
-    @ApiOperation(value = "按查询条件查询列表", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "按查询条件查询列表", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "__page", required = false, defaultValue = ""),
         @ApiImplicitParam(name = "__pageSize", required = false, defaultValue = ""),
@@ -177,7 +177,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         return Result.data(objs).paged(total, qs.getPage(), qs.getPageSize()).success();
     }
 
-    @ApiOperation(value = "{id}查询单个记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "{id}查询单个记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
         @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")

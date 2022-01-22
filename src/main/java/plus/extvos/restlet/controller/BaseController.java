@@ -61,7 +61,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         }
     }
 
-    @ApiOperation(value = "插入一条新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "插入一条新记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @PostMapping()
     @Log(action = LogAction.CREATE, level = LogLevel.IMPORTANT, comment = "Generic CREATE")
     @Transactional(rollbackFor = Exception.class)
@@ -116,7 +116,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         return updatedCols;
     }
 
-    @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @PutMapping(value = {"", "/{id}"})
     @Log(action = LogAction.UPDATE, level = LogLevel.IMPORTANT,comment = "Generic UPDATE")
     @Transactional(rollbackFor = Exception.class)
@@ -163,7 +163,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     }
 
 
-    @ApiOperation(value = "按条件删除记录", notes = "查询条件组织，请参考： https://github.com/quickstart/java-scaffolds/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "按条件删除记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @DeleteMapping(value = {"", "/{id}"})
     @Log(action = LogAction.DELETE, level = LogLevel.IMPORTANT, comment = "Generic DELETE")
     @Transactional(rollbackFor = Exception.class)
