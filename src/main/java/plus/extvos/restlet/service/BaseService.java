@@ -34,6 +34,23 @@ public interface BaseService<T> {
     int insert(List<T> entities) throws ResultException;
 
     /**
+     * Replace entity: insert new on missing or update on exists
+     * @param entity of object
+     * @return inserted of updated num
+     * @throws ResultException for failure
+     */
+    int replace(T entity) throws ResultException;
+
+
+    /**
+     * Replace entities: insert new on missing or update on exists
+     * @param entities of objects
+     * @return inserted of updated num
+     * @throws ResultException for failure
+     */
+    int replace(List<T> entities) throws ResultException;
+
+    /**
      * Delete by id
      *
      * @param id as pk

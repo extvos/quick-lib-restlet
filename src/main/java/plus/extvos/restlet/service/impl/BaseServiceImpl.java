@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.service.BaseService;
@@ -53,6 +54,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int insert(T entity) throws ResultException {
         int n = 0;
         try {
@@ -67,11 +69,11 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int insert(List<T> entities) throws ResultException {
         int n;
         try {
             n = entities.stream().mapToInt(entity -> getMapper().insert(entity)).sum();
-
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
@@ -81,7 +83,33 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         return n;
     }
 
+    /**
+     * Replace entity: insert new on missing or update on exists
+     *
+     * @param entity of object
+     * @return inserted of updated num
+     * @throws ResultException for failure
+     */
     @Override
+    public int replace(T entity) throws ResultException {
+        return 0;
+    }
+
+    /**
+     * Replace entities: insert new on missing or update on exists
+     *
+     * @param entities of objects
+     * @return inserted of updated num
+     * @throws ResultException for failure
+     */
+    @Override
+    public int replace(List<T> entities) throws ResultException {
+
+        return 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteById(Serializable id) throws ResultException {
         int n = 0;
         try {
@@ -96,6 +124,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteByMap(QuerySet<T> querySet) throws ResultException {
         int n = 0;
         try {
@@ -107,21 +136,25 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteByMap(Map<String, Object> columnMap) throws ResultException {
         return getMapper().deleteByMap(columnMap);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteByWrapper(Wrapper<T> queryWrapper) throws ResultException {
         return getMapper().delete(queryWrapper);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteByIds(Collection<? extends Serializable> idList) throws ResultException {
         return getMapper().deleteBatchIds(idList);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateById(Serializable id, T entity) throws ResultException {
         int n = 0;
         try {
@@ -139,6 +172,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateByMap(QuerySet<T> querySet, T entity) throws ResultException {
         int n = 0;
         try {
@@ -150,6 +184,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateByMap(Map<String, Object> columnMap, T entity) throws ResultException {
         QueryWrapper<T> qw = new QueryWrapper<T>();
         if (columnMap != null) {
@@ -159,6 +194,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateByWrapper(T entity, Wrapper<T> updateWrapper) throws ResultException {
         return getMapper().update(entity, updateWrapper);
     }
