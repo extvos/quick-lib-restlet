@@ -65,7 +65,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     @PostMapping()
     @Log(action = LogAction.CREATE, level = LogLevel.IMPORTANT, comment = "Generic CREATE")
     @Transactional(rollbackFor = Exception.class)
-    public final Result<T> insertNew(
+    public Result<T> insertNew(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @Validated(OnCreate.class) @RequestBody T record) throws ResultException {
         log.debug("insertNew:> {}, {}", pathMap, record);
@@ -120,7 +120,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     @PutMapping(value = {"", "/{id}"})
     @Log(action = LogAction.UPDATE, level = LogLevel.IMPORTANT,comment = "Generic UPDATE")
     @Transactional(rollbackFor = Exception.class)
-    public final Result<T> updateByMap(
+    public Result<T> updateByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap,
             @Validated(OnUpdate.class) @RequestBody T record) throws ResultException {
@@ -167,7 +167,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     @DeleteMapping(value = {"", "/{id}"})
     @Log(action = LogAction.DELETE, level = LogLevel.IMPORTANT, comment = "Generic DELETE")
     @Transactional(rollbackFor = Exception.class)
-    public final Result<Integer> deleteByMap(
+    public Result<Integer> deleteByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
