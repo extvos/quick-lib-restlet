@@ -188,9 +188,10 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         @PathVariable Serializable id,
         @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
+        id = convertId(id);
         QuerySet<T> qs = buildQuerySet(columnMap);
         preSelect(id);
-        T entity = getService().selectById(qs, convertId(id));
+        T entity = getService().selectById(qs, id);
         entity = postSelect(entity);
         log.debug("BaseROController:>{} selectById({})", getService().getClass().getName(), entity);
         if (entity == null) {

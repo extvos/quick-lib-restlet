@@ -130,9 +130,9 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         }
         int updated = 0;
         if (pathMap != null && pathMap.containsKey("id")) {
-            Serializable id = pathMap.get("id").toString();
+            Serializable id = convertId(pathMap.get("id").toString());
             record = preUpdate(id, record);
-            updated = getService().updateById(convertId(id), record);
+            updated = getService().updateById(id, record);
             postUpdate(id, record);
         } else {
             record = preUpdate(qs, record);
@@ -173,9 +173,9 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         int deleted = 0;
         if (pathMap != null && pathMap.containsKey("id")) {
-            Serializable id = pathMap.get("id").toString();
+            Serializable id = convertId(pathMap.get("id").toString());
             preDelete(id);
-            deleted = getService().deleteById(convertId(id));
+            deleted = getService().deleteById(id);
             postDelete(id);
         } else {
             qs = preDelete(qs);
