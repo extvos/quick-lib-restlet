@@ -26,6 +26,7 @@ import plus.extvos.restlet.service.BaseService;
 
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
@@ -61,6 +62,24 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         }
     }
 
+    private void updateFieldValue(T entity, String k, Object v) {
+        try {
+            Field f = entity.getClass().getDeclaredField(k);
+            if (null != f) {
+                f.setAccessible(true);
+                f.set(entity, PrimitiveConvert.from(v.toString()).to(f.getType()));
+            }
+//                    PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(record.getClass(), k);
+//                    if (null == pd) {
+//                        continue;
+//                    }
+//                    pd.getWriteMethod().invoke(record, PrimitiveConvert.from(pathMap.get(k).toString()).to(pd.getPropertyType()));
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            log.error(">>", e);
+//                    e.printStackTrace();
+        }
+    }
+
     @ApiOperation(value = "插入一条新记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @PostMapping()
     @Log(action = LogAction.CREATE, level = LogLevel.IMPORTANT, comment = "Generic CREATE")
@@ -75,16 +94,22 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         }
         if (Validator.notEmpty(pathMap)) {
             for (String k : pathMap.keySet()) {
-                try {
-                    PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(record.getClass(), k);
-                    if (null == pd) {
-                        continue;
-                    }
-                    pd.getWriteMethod().invoke(record, PrimitiveConvert.from(pathMap.get(k).toString()).to(pd.getPropertyType()));
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    log.error(">>", e);
-//                    e.printStackTrace();
-                }
+                updateFieldValue(record, k, pathMap.get(k));
+//                try {
+//                    Field f = record.getClass().getDeclaredField(k);
+//                    if (null != f) {
+//                        f.setAccessible(true);
+//                        f.set(record, PrimitiveConvert.from(pathMap.get(k).toString()).to(f.getType()));
+//                    }
+////                    PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(record.getClass(), k);
+////                    if (null == pd) {
+////                        continue;
+////                    }
+////                    pd.getWriteMethod().invoke(record, PrimitiveConvert.from(pathMap.get(k).toString()).to(pd.getPropertyType()));
+//                } catch (IllegalAccessException | NoSuchFieldException e) {
+//                    log.error(">>", e);
+////                    e.printStackTrace();
+//                }
             }
         }
         int n = getService().insert(record);
@@ -118,7 +143,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @PutMapping(value = {"", "/{id}"})
-    @Log(action = LogAction.UPDATE, level = LogLevel.IMPORTANT,comment = "Generic UPDATE")
+    @Log(action = LogAction.UPDATE, level = LogLevel.IMPORTANT, comment = "Generic UPDATE")
     @Transactional(rollbackFor = Exception.class)
     public Result<T> updateByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
@@ -138,20 +163,21 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             record = preUpdate(qs, record);
             if (Validator.notEmpty(pathMap)) {
                 for (String k : pathMap.keySet()) {
-                    try {
-                        PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(record.getClass(), k);
-                        if (null == pd) {
-                            continue;
-                        }
-                        if (pd.getPropertyType().isPrimitive()) {
-                            // TODO: we are not able to determine primitive types by null, so ...
-                            continue;
-                        }
-                        if (null != pd.getReadMethod().invoke(record)) {
-                            throw ResultException.forbidden("not allowed to update '" + k + "'");
-                        }
-                    } catch (IllegalAccessException | InvocationTargetException ignored) {
-                    }
+                    updateFieldValue(record, k, pathMap.get(k));
+//                    try {
+//                        PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(record.getClass(), k);
+//                        if (null == pd) {
+//                            continue;
+//                        }
+//                        if (pd.getPropertyType().isPrimitive()) {
+//                            // TODO: we are not able to determine primitive types by null, so ...
+//                            continue;
+//                        }
+//                        if (null != pd.getReadMethod().invoke(record)) {
+//                            throw ResultException.forbidden("not allowed to update '" + k + "'");
+//                        }
+//                    } catch (IllegalAccessException | InvocationTargetException ignored) {
+//                    }
                 }
             }
             updated = getService().updateByMap(qs, record);
