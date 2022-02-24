@@ -8,6 +8,7 @@
     <artifactId>quick-lib-restlet</artifactId>
     <name>quick-lib-restlet</name>
     <description>RESTful基础库</description>
+    <url>https://github.com/extvos/quickstart</url>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -102,7 +103,7 @@
                 <configuration>
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
                 </configuration>
             </plugin>
             <plugin>
