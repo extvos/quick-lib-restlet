@@ -7,12 +7,15 @@ import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.service.BaseService;
 import plus.extvos.restlet.service.QueryBuilder;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -53,7 +56,8 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public int insert(T entity) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int insert(@NotNull T entity) throws ResultException {
         int n = 0;
         try {
             n = getMapper().insert(entity);
@@ -67,11 +71,11 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public int insert(List<T> entities) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int insert(@NotNull List<T> entities) throws ResultException {
         int n;
         try {
             n = entities.stream().mapToInt(entity -> getMapper().insert(entity)).sum();
-
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
@@ -81,8 +85,80 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         return n;
     }
 
+    /**
+     * Replace entity: insert new on missing or update on exists
+     *
+     * @param entity of object
+     * @return inserted of updated num
+     * @throws ResultException for failure
+     */
     @Override
-    public int deleteById(Serializable id) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int replace(@NotNull T entity) throws ResultException {
+        Class<?> c = entity.getClass();
+        try {
+            Field f = c.getDeclaredField(tableInfo.getKeyColumn());
+            f.setAccessible(true);
+            Serializable id = (Serializable) f.get(entity);
+            if (null != id) {
+                QueryWrapper<T> qw = new QueryWrapper<T>();
+                qw = qw.eq(getTableInfo().getKeyColumn(), id);
+                int n = getMapper().update(entity, qw);
+                if (n > 0) {
+                    return n;
+                }
+            }
+            return getMapper().insert(entity);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw ResultException.internalServerError(e.getMessage());
+        }
+    }
+
+    /**
+     * Replace entities: insert new on missing or update on exists
+     *
+     * @param entities of objects
+     * @return inserted of updated num
+     * @throws ResultException for failure
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int replace(@NotNull List<T> entities) throws ResultException {
+        if (entities.size() < 1) {
+            return 0;
+        }
+        int totalReplaced = 0;
+        Class<?> c = entities.get(0).getClass();
+        Field f = null;
+        try {
+            f = c.getDeclaredField(tableInfo.getKeyColumn());
+        } catch (NoSuchFieldException e) {
+            throw ResultException.internalServerError(e.getMessage());
+        }
+        f.setAccessible(true);
+        for (T entity : entities) {
+            try {
+                Serializable id = (Serializable) f.get(entity);
+                if (null != id) {
+                    QueryWrapper<T> qw = new QueryWrapper<T>();
+                    qw = qw.eq(getTableInfo().getKeyColumn(), id);
+                    int n = getMapper().update(entity, qw);
+                    if (n > 0) {
+                        totalReplaced += 1;
+                        continue;
+                    }
+                }
+                totalReplaced += getMapper().insert(entity);
+            } catch (IllegalAccessException e) {
+                throw ResultException.internalServerError(e.getMessage());
+            }
+        }
+        return totalReplaced;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int deleteById(@NotNull Serializable id) throws ResultException {
         int n = 0;
         try {
             n = getMapper().deleteById(id);
@@ -96,7 +172,8 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public int deleteByMap(QuerySet<T> querySet) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int deleteByMap(@NotNull QuerySet<T> querySet) throws ResultException {
         int n = 0;
         try {
             n = getMapper().delete(querySet.buildQueryWrapper(this));
@@ -107,26 +184,29 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteByMap(Map<String, Object> columnMap) throws ResultException {
         return getMapper().deleteByMap(columnMap);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteByWrapper(Wrapper<T> queryWrapper) throws ResultException {
         return getMapper().delete(queryWrapper);
     }
 
     @Override
-    public int deleteByIds(Collection<? extends Serializable> idList) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int deleteByIds(@NotNull Collection<? extends Serializable> idList) throws ResultException {
         return getMapper().deleteBatchIds(idList);
     }
 
     @Override
-    public int updateById(Serializable id, T entity) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int updateById(@NotNull Serializable id, @NotNull T entity) throws ResultException {
         int n = 0;
         try {
             QueryWrapper<T> qw = new QueryWrapper<T>();
-//            qw = qw.eq("id", id);
             qw = qw.eq(getTableInfo().getKeyColumn(), id);
             n = getMapper().update(entity, qw);
         } catch (Exception e) {
@@ -139,7 +219,8 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public int updateByMap(QuerySet<T> querySet, T entity) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int updateByMap(@NotNull QuerySet<T> querySet, @NotNull T entity) throws ResultException {
         int n = 0;
         try {
             n = getMapper().update(entity, querySet.buildQueryWrapper(this));
@@ -150,7 +231,8 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public int updateByMap(Map<String, Object> columnMap, T entity) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int updateByMap(Map<String, Object> columnMap, @NotNull T entity) throws ResultException {
         QueryWrapper<T> qw = new QueryWrapper<T>();
         if (columnMap != null) {
             columnMap.forEach(qw::eq);
@@ -159,16 +241,16 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public int updateByWrapper(T entity, Wrapper<T> updateWrapper) throws ResultException {
+    @Transactional(rollbackFor = Exception.class)
+    public int updateByWrapper(@NotNull T entity, Wrapper<T> updateWrapper) throws ResultException {
         return getMapper().update(entity, updateWrapper);
     }
 
     @Override
-    public T selectById(Serializable id) throws ResultException {
+    public T selectById(@NotNull Serializable id) throws ResultException {
         T obj;
         try {
             QueryWrapper<T> qw = new QueryWrapper<>();
-//            qw = qw.eq("id", id);
             qw = qw.eq(getTableInfo().getKeyColumn(), id);
             obj = getMapper().selectOne(qw);
         } catch (Exception e) {
@@ -182,14 +264,13 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public T selectById(QuerySet<T> querySet, Serializable id) throws ResultException {
+    public T selectById(QuerySet<T> querySet, @NotNull Serializable id) throws ResultException {
         T obj;
         try {
             QueryWrapper<T> qw = new QueryWrapper<>();
             if (querySet != null) {
                 qw = qw.select(querySet.columns().toArray(new String[0]));
             }
-//            qw = qw.eq("id", id);
             qw = qw.eq(getTableInfo().getKeyColumn(), id);
             obj = getMapper().selectOne(qw);
         } catch (Exception e) {
@@ -203,7 +284,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public List<T> selectByMap(QuerySet<T> querySet) throws ResultException {
+    public List<T> selectByMap(@NotNull QuerySet<T> querySet) throws ResultException {
         List<T> objs;
         try {
             QueryWrapper<T> qw = querySet.buildQueryWrapper(this).clone();
@@ -235,12 +316,12 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public List<T> selectByWrapper(Wrapper<T> queryWrapper) throws ResultException {
+    public List<T> selectByWrapper(@NotNull Wrapper<T> queryWrapper) throws ResultException {
         return getMapper().selectList(queryWrapper);
     }
 
     @Override
-    public Long countByMap(QuerySet<T> querySet) throws ResultException {
+    public Long countByMap(@NotNull QuerySet<T> querySet) throws ResultException {
         long n = 0L;
         try {
             n = (long) getMapper().selectCount(querySet.buildQueryWrapper(this));
@@ -253,12 +334,12 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public Long countByWrapper(Wrapper<T> queryWrapper) throws ResultException {
+    public Long countByWrapper(@NotNull Wrapper<T> queryWrapper) throws ResultException {
         return (long) getMapper().selectCount(queryWrapper);
     }
 
     @Override
-    public T selectOne(QuerySet<T> querySet) throws ResultException {
+    public T selectOne(@NotNull QuerySet<T> querySet) throws ResultException {
         T obj;
         try {
             QueryWrapper<T> qw = querySet.buildQueryWrapper(this).clone();
@@ -274,7 +355,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
-    public T selectOne(Wrapper<T> queryWrapper) throws ResultException {
+    public T selectOne(@NotNull Wrapper<T> queryWrapper) throws ResultException {
         return getMapper().selectOne(queryWrapper);
     }
 
