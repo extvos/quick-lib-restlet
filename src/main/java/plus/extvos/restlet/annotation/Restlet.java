@@ -16,21 +16,25 @@ public @interface Restlet {
 
     /**
      * If allowed to read record(s)
+     * @return true if readable
      */
     boolean readable() default true;
 
     /**
      * If allowed to create new record(s)
+     * @return true if creatable
      */
     boolean creatable() default true;
 
     /**
      * If allowed to update record(s)
+     * @return true if updatable
      */
     boolean updatable() default true;
 
     /**
      * If allowed to delete record(s)
+     * @return true if deletable
      */
     boolean deletable() default true;
 }

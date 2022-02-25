@@ -36,7 +36,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     /**
      * get the generic type which helps to get table info
      *
-     * @return Class<T>
+     * @return Class&lt;T&gt;
      */
     protected Class<?> getGenericType() {
         Type genericSuperclass = this.getClass().getGenericSuperclass();
