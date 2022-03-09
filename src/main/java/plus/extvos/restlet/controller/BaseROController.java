@@ -12,6 +12,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import plus.extvos.common.Assert;
 import plus.extvos.common.Validator;
 import plus.extvos.logging.annotation.Log;
 import plus.extvos.logging.annotation.type.LogAction;
@@ -154,17 +155,17 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     @ApiOperation(value = "按查询条件查询列表", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "__page", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__pageSize", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__orderBy", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
+            @ApiImplicitParam(name = "__page", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__pageSize", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__orderBy", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping()
     @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic SELECT multiple rows")
     public final Result<List<T>> selectByMap(
-        @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
         log.debug("BaseROController<{}>::selectByMap:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
@@ -179,14 +180,14 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     @ApiOperation(value = "{id}查询单个记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
-        @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
+            @ApiImplicitParam(name = "__includes", required = false, defaultValue = ""),
+            @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping("/{id}")
     @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic Select by Id")
     public final Result<T> selectById(
-        @PathVariable Serializable id,
-        @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
+            @PathVariable Serializable id,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
         id = convertId(id);
         QuerySet<T> qs = buildQuerySet(columnMap);
@@ -200,14 +201,20 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         return Result.data(entity).success();
     }
 
-    protected Serializable convertId(Serializable id) {
-        if (Integer.class == getTableInfo().getKeyType()) {
-            return Integer.parseInt(id.toString());
-        } else if (Long.class == getTableInfo().getKeyType()) {
-            return Long.parseLong(id.toString());
-        } else {
-            return id;
+    protected Serializable convertId(Serializable id) throws ResultException {
+        Assert.notEmpty(id);
+        try {
+            if (Integer.class == getTableInfo().getKeyType()) {
+                return Integer.parseInt(id.toString());
+            } else if (Long.class == getTableInfo().getKeyType()) {
+                return Long.parseLong(id.toString());
+            } else {
+                return id;
+            }
+        } catch (Exception e) {
+            throw ResultException.badRequest(e.getMessage());
         }
+
 //        try {
 //            Object nid = getTableInfo().getKeyType().newInstance();
 //        } catch (InstantiationException | IllegalAccessException e) {
