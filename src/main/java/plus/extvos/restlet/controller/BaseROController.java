@@ -8,22 +8,21 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import plus.extvos.common.Assert;
+import plus.extvos.common.Result;
 import plus.extvos.common.Validator;
+import plus.extvos.common.exception.ResultException;
+import plus.extvos.common.utils.SpringContextHolder;
 import plus.extvos.logging.annotation.Log;
 import plus.extvos.logging.annotation.type.LogAction;
 import plus.extvos.logging.annotation.type.LogLevel;
 import plus.extvos.restlet.QuerySet;
-import plus.extvos.common.Result;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
-import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.service.BaseService;
-import plus.extvos.common.utils.SpringContextHolder;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -172,11 +171,26 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         log.debug("BaseROController<{}>::selectByMap:2 {}", getService().getClass().getName(), qs);
         long total = getService().countByMap(qs);
         log.debug("BaseROController<{}>::selectByMap:3 total = {}", getService().getClass().getName(), total);
-        List<T> objs = getService().selectByMap(qs);
+        List<T> objs = qs.getPageSize() > 0 ? getService().selectByMap(qs) : new ArrayList<>();
         log.debug("BaseROController<{}>::selectByMap:4 count = {}", getService().getClass().getName(), objs.size());
         objs = postSelect(objs);
         return Result.data(objs).paged(total, qs.getPage(), qs.getPageSize()).success();
     }
+
+    @ApiOperation(value = "按查询条件查询数量", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
+    @GetMapping("/_count")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic COUNT multiple rows")
+    public final Result<Long> countByMap(
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        log.debug("BaseROController<{}>::countByMap:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
+        QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
+        qs = preSelect(qs);
+        log.debug("BaseROController<{}>::countByMap:2 {}", getService().getClass().getName(), qs);
+        long total = getService().countByMap(qs);
+        return Result.data(total).success();
+    }
+
 
     @ApiOperation(value = "{id}查询单个记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @ApiImplicitParams({
