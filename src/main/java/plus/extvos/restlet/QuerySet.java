@@ -22,8 +22,8 @@ public class QuerySet<T> implements Serializable {
     private static final String OP_NOTNULL = "notnull";
     private static final String OP_ISNULL = "isnull";
     private static final String OP_CONTAINS = "contains";
-    private static final String OP_START_WITH = "startWith";
-    private static final String OP_END_WITH = "endWith";
+    private static final String OP_START_WITH = "startwith";
+    private static final String OP_END_WITH = "endwith";
     private static final String OP_GT = "gt";
     private static final String OP_GTE = "gte";
     private static final String OP_LT = "lt";
@@ -282,6 +282,11 @@ public class QuerySet<T> implements Serializable {
         }
     }
 
+    private QueryWrapper<?> wrapQuery(QueryWrapper<?> wrapper) throws ResultException {
+
+        return wrapper;
+    }
+
     protected void parseQuery(String k, Object v, QueryWrapper<?> wrapper) throws ResultException {
         String[] ks = k.split("__");
         log.debug("parseQuery > {}", k);
@@ -297,16 +302,6 @@ public class QuerySet<T> implements Serializable {
             throw ResultException.internalServerError("can not get type of column: " + ks[0]);
         }
         FieldConvertor fcv = new FieldConvertor(fieldType);
-//        boolean fieldAccepted = false;
-//        for (TableFieldInfo fieldInfo : tableInfo.getFieldList()) {
-//            fieldAccepted = fieldInfo.getColumn().equals(field) || fieldInfo.getProperty().equals(field);
-//            if (fieldAccepted) {
-//                break;
-//            }
-//        }
-//        if (!fieldAccepted) {
-//            throw ResultException.badRequest("unknown column '" + field + "'");
-//        }
         String operator;
         boolean condition = true;
         if (ks.length >= 3) {
