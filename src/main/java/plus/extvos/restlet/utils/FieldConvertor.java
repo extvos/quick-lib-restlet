@@ -1,5 +1,6 @@
 package plus.extvos.restlet.utils;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 
 public class FieldConvertor {
@@ -27,6 +28,8 @@ public class FieldConvertor {
             return Boolean.parseBoolean(o.toString());
         } else if (generic == Timestamp.class) {
             return Timestamp.valueOf(o.toString());
+        } else if (generic == Date.class) {
+            return Date.valueOf(o.toString());
         } else if (generic == String.class) {
             return o.toString();
         }
