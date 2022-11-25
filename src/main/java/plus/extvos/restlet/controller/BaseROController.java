@@ -22,6 +22,7 @@ import plus.extvos.logging.annotation.type.LogLevel;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
+import plus.extvos.restlet.service.Aggregation;
 import plus.extvos.restlet.service.BaseService;
 
 import java.io.Serializable;
@@ -162,7 +163,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     })
     @GetMapping()
     @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic SELECT multiple rows")
-    public final Result<List<T>> selectByMap(
+    public Result<List<T>> selectByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
         log.debug("BaseROController<{}>::selectByMap:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
@@ -177,18 +178,68 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         return Result.data(objs).paged(total, qs.getPage(), qs.getPageSize()).success();
     }
 
-    @ApiOperation(value = "按查询条件查询数量", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
+    @ApiOperation(value = "按查询条件统计数量", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @GetMapping("/_count")
     @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic COUNT multiple rows")
-    public final Result<Long> countByMap(
+    public Result<Long> countByQuery(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
-        log.debug("BaseROController<{}>::countByMap:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
+        log.debug("BaseROController<{}>::countByQuery:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
-        log.debug("BaseROController<{}>::countByMap:2 {}", getService().getClass().getName(), qs);
+        log.debug("BaseROController<{}>::countByQuery:2 {}", getService().getClass().getName(), qs);
         long total = getService().countByMap(qs);
         return Result.data(total).success();
+    }
+
+    @ApiOperation(value = "按查询条件根据字段分组统计数量", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
+    @GetMapping("/_count/{fieldName}")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "COUNT by field grouping")
+    public Result<Map<Object, Long>> countByField(
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        log.debug("BaseROController<{}>::countByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
+        Assert.notNull(pathMap, ResultException.badRequest());
+        Assert.isTrue(pathMap.containsKey("fieldName"), ResultException.badRequest("fieldName required"));
+        String fieldName = pathMap.get("fieldName").toString();
+        pathMap.remove("fieldName");
+        QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
+        qs = preSelect(qs);
+        log.debug("BaseROController<{}>::countByField:2 {}", getService().getClass().getName(), qs);
+        Map<Object, Long> ret = getService().countByMap(fieldName, qs);
+        return Result.data(ret).success();
+    }
+
+    @ApiOperation(value = "按查询条件根据字段分组聚合统计", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
+    @GetMapping("/_aggregate/{fieldName}")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Aggregate by field grouping")
+    public Result<List<Map<String, Object>>> aggregateByField(
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        log.debug("BaseROController<{}>::aggregateByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
+        Assert.notNull(pathMap, ResultException.badRequest());
+        Assert.isTrue(pathMap.containsKey("fieldName"), ResultException.badRequest("fieldName required"));
+        String fieldName = pathMap.get("fieldName").toString();
+        pathMap.remove("fieldName");
+        List<Aggregation> aggregations = new LinkedList<>();
+        if(null != queryMap){
+            queryMap.entrySet().removeIf(entry -> {
+               String k = entry.getKey();
+                if (k.startsWith("__") && Aggregation.validFunc(k.substring(2))) {
+                    String[] fields = entry.getValue().toString().split(",");
+                    for (String f : fields) {
+                        aggregations.add(new Aggregation(k.substring(2), f));
+                    }
+                    return true;
+                }
+                return false;
+            });
+        }
+        QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
+        qs = preSelect(qs);
+        log.debug("BaseROController<{}>::aggregateByField:2 {}", getService().getClass().getName(), qs);
+        List<Map<String, Object>> ret = getService().aggregateByMap(fieldName, qs, aggregations.toArray(new Aggregation[0]));
+        return Result.data(ret).success();
     }
 
 
@@ -199,7 +250,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     })
     @GetMapping("/{id}")
     @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic Select by Id")
-    public final Result<T> selectById(
+    public Result<T> selectById(
             @PathVariable Serializable id,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);

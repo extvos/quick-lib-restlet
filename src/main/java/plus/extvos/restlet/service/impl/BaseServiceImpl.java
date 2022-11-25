@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.QuerySet;
+import plus.extvos.restlet.service.Aggregation;
 import plus.extvos.restlet.service.BaseService;
 import plus.extvos.restlet.service.QueryBuilder;
 
@@ -18,9 +19,8 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Mingcai SHEN
@@ -334,8 +334,55 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     @Override
+    public Map<Object, Long> countByMap(String fieldName, QuerySet<T> querySet) throws ResultException {
+        QueryWrapper<T> qw = querySet.buildQueryWrapper();
+        qw.select(fieldName, "COUNT(1) AS count");
+        qw.groupBy(fieldName);
+        List<Map<String, Object>> rows = getMapper().selectMaps(qw);
+        Map<Object, Long> result = new HashMap<>(rows.size());
+        rows.forEach(r -> {
+                    result.put(r.get(fieldName), (Long) r.get("count"));
+                }
+        );
+        return result;
+    }
+
+    @Override
+    public Map<Object, Long> countByWrapper(String fieldName, Wrapper<T> queryWrapper) throws ResultException {
+        QueryWrapper<T> qw = (QueryWrapper<T>) queryWrapper;
+        qw.select(fieldName, "COUNT(1)");
+        qw.groupBy(fieldName);
+        List<Map<String, Object>> rows = getMapper().selectMaps(qw);
+        Map<Object, Long> result = new HashMap<>(rows.size());
+        rows.forEach(r -> {
+                    result.put(r.get(fieldName), (Long) r.get("count"));
+                }
+        );
+        return result;
+    }
+
+    @Override
     public Long countByWrapper(@NotNull Wrapper<T> queryWrapper) throws ResultException {
         return (long) getMapper().selectCount(queryWrapper);
+    }
+
+
+    @Override
+    public List<Map<String, Object>> aggregateByMap(String fieldName, QuerySet<T> querySet, Aggregation... aggregations) throws ResultException {
+        QueryWrapper<T> qw = querySet.buildQueryWrapper();
+        String[] columns;
+        if (aggregations.length < 1) {
+            columns = new String[]{fieldName, "COUNT(1) AS count"};
+        } else {
+            List<String> ls = new LinkedList<>();
+            ls.add(fieldName);
+            ls.addAll(Arrays.stream(aggregations).map(Aggregation::expression).collect(Collectors.toList()));
+            columns = ls.toArray(new String[0]);
+        }
+        qw.select(columns);
+        qw.groupBy(fieldName);
+        List<Map<String, Object>> rows = getMapper().selectMaps(qw);
+        return rows;
     }
 
     @Override

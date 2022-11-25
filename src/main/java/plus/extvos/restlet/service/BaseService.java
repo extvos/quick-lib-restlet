@@ -35,6 +35,7 @@ public interface BaseService<T> {
 
     /**
      * Replace entity: insert new on missing or update on exists
+     *
      * @param entity of object
      * @return inserted of updated num
      * @throws ResultException for failure
@@ -44,6 +45,7 @@ public interface BaseService<T> {
 
     /**
      * Replace entities: insert new on missing or update on exists
+     *
      * @param entities of objects
      * @return inserted of updated num
      * @throws ResultException for failure
@@ -151,7 +153,7 @@ public interface BaseService<T> {
     /**
      * select by id
      *
-     * @param id       as pk
+     * @param id as pk
      * @return entity
      * @throws ResultException for failures
      */
@@ -194,6 +196,10 @@ public interface BaseService<T> {
      */
     Long countByMap(QuerySet<T> querySet) throws ResultException;
 
+    Map<Object, Long> countByMap(String fieldName, QuerySet<T> querySet) throws ResultException;
+
+    List<Map<String, Object>> aggregateByMap(String fieldName, QuerySet<T> querySet, Aggregation... aggregations) throws ResultException;
+
     /**
      * Count by wrapper
      *
@@ -202,6 +208,9 @@ public interface BaseService<T> {
      * @throws ResultException for failures
      */
     Long countByWrapper(@Param(Constants.WRAPPER) Wrapper<T> queryWrapper) throws ResultException;
+
+
+    Map<Object, Long> countByWrapper(String fieldName, @Param(Constants.WRAPPER) Wrapper<T> queryWrapper) throws ResultException;
 
     /**
      * select one entity by queries
