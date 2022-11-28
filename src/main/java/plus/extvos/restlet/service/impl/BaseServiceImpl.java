@@ -341,7 +341,8 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         List<Map<String, Object>> rows = getMapper().selectMaps(qw);
         Map<Object, Long> result = new HashMap<>(rows.size());
         rows.forEach(r -> {
-                    result.put(r.get(fieldName), (Long) r.get("count"));
+
+                    result.put(r.get(fieldName)==null?"":r.get(fieldName), (Long) r.get("count"));
                 }
         );
         return result;
@@ -355,7 +356,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         List<Map<String, Object>> rows = getMapper().selectMaps(qw);
         Map<Object, Long> result = new HashMap<>(rows.size());
         rows.forEach(r -> {
-                    result.put(r.get(fieldName), (Long) r.get("count"));
+                    result.put(r.get(fieldName)==null?"":r.get(fieldName), (Long) r.get("count"));
                 }
         );
         return result;
