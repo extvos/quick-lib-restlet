@@ -3,8 +3,8 @@ package plus.extvos.restlet.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
 import org.apache.ibatis.annotations.Param;
-import plus.extvos.restlet.QuerySet;
 import plus.extvos.common.exception.ResultException;
+import plus.extvos.restlet.QuerySet;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -199,6 +199,10 @@ public interface BaseService<T> {
     Map<Object, Long> countByMap(String fieldName, QuerySet<T> querySet) throws ResultException;
 
     List<Map<String, Object>> aggregateByMap(String fieldName, QuerySet<T> querySet, Aggregation... aggregations) throws ResultException;
+
+    List<Map<String, Object>> trendByMap(String fieldName, String interval, String[] groupBy, QuerySet<T> querySet, Aggregation... aggregations) throws ResultException;
+
+//    List<Map<String, Object>> trendTimeline(String interval, Timestamp begin, Timestamp end) throws ResultException;
 
     /**
      * Count by wrapper

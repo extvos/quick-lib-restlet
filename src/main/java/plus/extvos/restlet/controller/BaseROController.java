@@ -24,11 +24,13 @@ import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
 import plus.extvos.restlet.service.Aggregation;
 import plus.extvos.restlet.service.BaseService;
+import plus.extvos.restlet.utils.DateTrunc;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Mingcai SHEN
@@ -222,9 +224,9 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         String fieldName = pathMap.get("fieldName").toString();
         pathMap.remove("fieldName");
         List<Aggregation> aggregations = new LinkedList<>();
-        if(null != queryMap){
+        if (null != queryMap) {
             queryMap.entrySet().removeIf(entry -> {
-               String k = entry.getKey();
+                String k = entry.getKey();
                 if (k.startsWith("__") && Aggregation.validFunc(k.substring(2))) {
                     String[] fields = entry.getValue().toString().split(",");
                     for (String f : fields) {
@@ -239,6 +241,59 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         qs = preSelect(qs);
         log.debug("BaseROController<{}>::aggregateByField:2 {}", getService().getClass().getName(), qs);
         List<Map<String, Object>> ret = getService().aggregateByMap(fieldName, qs, aggregations.toArray(new Aggregation[0]));
+        return Result.data(ret).success();
+    }
+
+//    @ApiOperation(value = "获取一段时间分段", notes = "该操作不查询任何实体数据库表")
+//    @GetMapping("_trend/{interval}")
+//    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Get a timeline ")
+//    public Result<List<Map<String, Object>>> trendTimeline(
+//            @PathVariable("interval") String interval,
+//            @RequestParam("begin") Timestamp begin,
+//            @RequestParam("end") Timestamp end
+//    ) throws ResultException {
+//        return Result.data(getService().trendTimeline(interval, begin, end)).success();
+//    }
+
+    @ApiOperation(value = "按查询条件根据时间字段字段分组聚合统计", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
+    @GetMapping("/_trend/{fieldName}/{interval}")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Aggregate by timestamp and field grouping")
+    public Result<List<Map<String, Object>>> trendByField(
+            @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
+            @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        log.debug("BaseROController<{}>::trendByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
+        Assert.notNull(pathMap, ResultException.badRequest());
+        AtomicReference<String> groupBy = new AtomicReference<>();
+        Assert.isTrue(pathMap.containsKey("fieldName"), ResultException.badRequest("fieldName required"));
+        Assert.isTrue(pathMap.containsKey("interval"), ResultException.badRequest("interval required"));
+        String fieldName = pathMap.get("fieldName").toString();
+        pathMap.remove("fieldName");
+        String interval = pathMap.get("interval").toString();
+        pathMap.remove("interval");
+        Assert.isTrue(DateTrunc.validate(interval), ResultException.badRequest());
+        List<Aggregation> aggregations = new LinkedList<>();
+        if (null != queryMap) {
+            queryMap.entrySet().removeIf(entry -> {
+                String k = entry.getKey();
+                if (k.startsWith("__") && Aggregation.validFunc(k.substring(2))) {
+                    String[] fields = entry.getValue().toString().split(",");
+                    for (String f : fields) {
+                        aggregations.add(new Aggregation(k.substring(2), f));
+                    }
+                    return true;
+                } else if (k.equalsIgnoreCase("__groupBy") || k.equalsIgnoreCase("__group_by")) {
+                    groupBy.set(entry.getValue().toString());
+                    return true;
+                }
+                return false;
+            });
+        }
+        QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
+        qs = preSelect(qs);
+        log.debug("BaseROController<{}>::trendByField:2 {}", getService().getClass().getName(), qs);
+        List<Map<String, Object>> ret = getService().trendByMap(
+                fieldName, interval, groupBy.get() != null ? groupBy.get().split(",") : null
+                , qs, aggregations.toArray(new Aggregation[0]));
         return Result.data(ret).success();
     }
 

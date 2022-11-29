@@ -8,11 +8,13 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
+import plus.extvos.common.Assert;
 import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.service.Aggregation;
 import plus.extvos.restlet.service.BaseService;
 import plus.extvos.restlet.service.QueryBuilder;
+import plus.extvos.restlet.utils.DateTrunc;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -342,7 +344,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         Map<Object, Long> result = new HashMap<>(rows.size());
         rows.forEach(r -> {
 
-                    result.put(r.get(fieldName)==null?"":r.get(fieldName), (Long) r.get("count"));
+                    result.put(r.get(fieldName) == null ? "" : r.get(fieldName), (Long) r.get("count"));
                 }
         );
         return result;
@@ -356,7 +358,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         List<Map<String, Object>> rows = getMapper().selectMaps(qw);
         Map<Object, Long> result = new HashMap<>(rows.size());
         rows.forEach(r -> {
-                    result.put(r.get(fieldName)==null?"":r.get(fieldName), (Long) r.get("count"));
+                    result.put(r.get(fieldName) == null ? "" : r.get(fieldName), (Long) r.get("count"));
                 }
         );
         return result;
@@ -371,20 +373,45 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     @Override
     public List<Map<String, Object>> aggregateByMap(String fieldName, QuerySet<T> querySet, Aggregation... aggregations) throws ResultException {
         QueryWrapper<T> qw = querySet.buildQueryWrapper();
-        String[] columns;
+        String[] fields = fieldName.split(",");
+        List<String> ls = new LinkedList<>(Arrays.asList(fields));
         if (aggregations.length < 1) {
-            columns = new String[]{fieldName, "COUNT(1) AS count"};
+            ls.add("COUNT(1) AS count");
         } else {
-            List<String> ls = new LinkedList<>();
-            ls.add(fieldName);
             ls.addAll(Arrays.stream(aggregations).map(Aggregation::expression).collect(Collectors.toList()));
-            columns = ls.toArray(new String[0]);
         }
-        qw.select(columns);
-        qw.groupBy(fieldName);
-        List<Map<String, Object>> rows = getMapper().selectMaps(qw);
-        return rows;
+        qw.select(ls.toArray(new String[0]));
+        qw.groupBy(fields);
+        return getMapper().selectMaps(qw);
     }
+
+    // Only adapt to pg
+    @Override
+    public List<Map<String, Object>> trendByMap(String fieldName, String interval, String[] groupBy, QuerySet<T> querySet, Aggregation... aggregations) throws ResultException {
+        QueryWrapper<T> qw = querySet.buildQueryWrapper();
+        Assert.isTrue(DateTrunc.validate(interval), ResultException.badRequest());
+        List<String> ls = new LinkedList<>();
+        List<String> groups = new LinkedList<>();
+        ls.add("date_trunc('" + interval + "', " + fieldName + ") as " + fieldName);
+        groups.add("date_trunc('" + interval + "', " + fieldName + ")");
+        if (null != groupBy && groupBy.length > 0) {
+            ls.addAll(Arrays.asList(groupBy));
+            groups.addAll(Arrays.asList(groupBy));
+        }
+        if (aggregations.length < 1) {
+            ls.add("COUNT(1) AS count");
+        } else {
+            ls.addAll(Arrays.stream(aggregations).map(Aggregation::expression).collect(Collectors.toList()));
+        }
+        qw.select(ls.toArray(new String[0]));
+        qw.groupBy(groups.toArray(new String[0]));
+        return getMapper().selectMaps(qw);
+    }
+
+//    @Override
+//    public List<Map<String, Object>> trendTimeline(String interval, Timestamp begin, Timestamp end) throws ResultException{
+//        getMapper().
+//    }
 
     @Override
     public T selectOne(@NotNull QuerySet<T> querySet) throws ResultException {
