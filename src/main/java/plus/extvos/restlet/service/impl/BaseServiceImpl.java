@@ -258,9 +258,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
-        if (null == obj) {
-            throw ResultException.notFound("record of id not found");
-        }
+//        if (null == obj) {
+//            throw ResultException.notFound("record of id not found");
+//        }
         return obj;
 
     }
@@ -278,9 +278,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
-        if (null == obj) {
-            throw ResultException.notFound("record of id not found");
-        }
+//        if (null == obj) {
+//            throw ResultException.notFound("record of id not found");
+//        }
         return obj;
 
     }
@@ -423,9 +423,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
-        if (null == obj) {
-            throw ResultException.notFound("record not found");
-        }
+//        if (null == obj) {
+//            throw ResultException.notFound("record not found");
+//        }
         return obj;
     }
 
