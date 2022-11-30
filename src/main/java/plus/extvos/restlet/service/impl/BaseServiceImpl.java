@@ -337,7 +337,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
 
     @Override
     public Map<Object, Long> countByMap(String fieldName, QuerySet<T> querySet) throws ResultException {
-        QueryWrapper<T> qw = querySet.buildQueryWrapper();
+        QueryWrapper<T> qw = querySet.buildQueryWrapper(this);
         qw.select(fieldName, "COUNT(1) AS count");
         qw.groupBy(fieldName);
         List<Map<String, Object>> rows = getMapper().selectMaps(qw);
@@ -372,7 +372,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
 
     @Override
     public List<Map<String, Object>> aggregateByMap(String fieldName, QuerySet<T> querySet, Aggregation... aggregations) throws ResultException {
-        QueryWrapper<T> qw = querySet.buildQueryWrapper();
+        QueryWrapper<T> qw = querySet.buildQueryWrapper(this);
         String[] fields = fieldName.split(",");
         List<String> ls = new LinkedList<>(Arrays.asList(fields));
         if (aggregations.length < 1) {
@@ -388,7 +388,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     // Only adapt to pg
     @Override
     public List<Map<String, Object>> trendByMap(String fieldName, String interval, String[] groupBy, QuerySet<T> querySet, Aggregation... aggregations) throws ResultException {
-        QueryWrapper<T> qw = querySet.buildQueryWrapper();
+        QueryWrapper<T> qw = querySet.buildQueryWrapper(this);
         Assert.isTrue(DateTrunc.validate(interval), ResultException.badRequest());
         List<String> ls = new LinkedList<>();
         List<String> groups = new LinkedList<>();
