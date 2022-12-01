@@ -242,6 +242,23 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         return getMapper().update(entity, qw);
     }
 
+    private QueryWrapper<T> querySetFinish(@NotNull QuerySet<T> querySet, @NotNull QueryWrapper<T> queryWrapper) {
+        if (querySet.getOrderBy() != null && querySet.getOrderBy().size() > 0) {
+            QueryWrapper<T> finalQw = queryWrapper;
+            querySet.getOrderBy().forEach((String s) -> {
+                if (s.startsWith("-")) {
+                    finalQw.orderByDesc(s.substring(1));
+                } else {
+                    finalQw.orderByAsc(s);
+                }
+            });
+        }
+        if (querySet.getPageSize() >= 0) {
+            queryWrapper = queryWrapper.last("LIMIT " + querySet.getPageSize() + " OFFSET " + (querySet.getPage() * querySet.getPageSize()));
+        }
+        return queryWrapper;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int updateByWrapper(@NotNull T entity, Wrapper<T> updateWrapper) throws ResultException {
@@ -291,19 +308,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         try {
             QueryWrapper<T> qw = querySet.buildQueryWrapper(this).clone();
             qw = qw.select(querySet.columns().toArray(new String[0]));
-            if (querySet.getOrderBy() != null && querySet.getOrderBy().size() > 0) {
-                QueryWrapper<T> finalQw = qw;
-                querySet.getOrderBy().forEach((String s) -> {
-                    if (s.startsWith("-")) {
-                        finalQw.orderByDesc(s.substring(1));
-                    } else {
-                        finalQw.orderByAsc(s);
-                    }
-                });
-            }
-            if (querySet.getPageSize() >= 0) {
-                qw = qw.last("LIMIT " + querySet.getPageSize() + " OFFSET " + (querySet.getPage() * querySet.getPageSize()));
-            }
+            qw = querySetFinish(querySet, qw);
             objs = getMapper().selectList(qw);
         } catch (Exception e) {
             log.error(">>", e);
@@ -340,10 +345,10 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         QueryWrapper<T> qw = querySet.buildQueryWrapper(this);
         qw.select(fieldName, "COUNT(1) AS count");
         qw.groupBy(fieldName);
+        qw = querySetFinish(querySet, qw);
         List<Map<String, Object>> rows = getMapper().selectMaps(qw);
         Map<Object, Long> result = new HashMap<>(rows.size());
         rows.forEach(r -> {
-
                     result.put(r.get(fieldName) == null ? "" : r.get(fieldName), (Long) r.get("count"));
                 }
         );
@@ -382,6 +387,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         }
         qw.select(ls.toArray(new String[0]));
         qw.groupBy(fields);
+        qw = querySetFinish(querySet, qw);
         return getMapper().selectMaps(qw);
     }
 
