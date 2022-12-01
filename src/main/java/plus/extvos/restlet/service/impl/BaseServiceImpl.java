@@ -261,7 +261,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int updateByWrapper(@NotNull T entity, Wrapper<T> updateWrapper) throws ResultException {
+    public int updateByWrapper(T entity, Wrapper<T> updateWrapper) throws ResultException {
         return getMapper().update(entity, updateWrapper);
     }
 
