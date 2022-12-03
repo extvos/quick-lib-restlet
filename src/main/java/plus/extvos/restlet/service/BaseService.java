@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Constants;
 import org.apache.ibatis.annotations.Param;
 import plus.extvos.common.exception.ResultException;
 import plus.extvos.restlet.QuerySet;
+import plus.extvos.restlet.config.RestletConfig;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -15,6 +16,19 @@ import java.util.Map;
  * @author Mingcai SHEN
  */
 public interface BaseService<T> {
+
+    /**
+     * Build QuerySet from request map params and configurations.
+     * @param config RestletConfig
+     * @param defaultIncludes default included columns
+     * @param defaultExcludes default excluded columns
+     * @param columnMaps query maps
+     * @return QuerySet instance
+     */
+    QuerySet<T> buildQuerySet(RestletConfig config,
+                              String[] defaultIncludes,
+                              String[] defaultExcludes,
+                              Map<String, Object>... columnMaps);
     /**
      * Insert a new entity
      *

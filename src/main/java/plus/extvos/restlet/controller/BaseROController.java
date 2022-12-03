@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import plus.extvos.common.Assert;
 import plus.extvos.common.Result;
-import plus.extvos.common.Validator;
 import plus.extvos.common.exception.ResultException;
 import plus.extvos.common.utils.SpringContextHolder;
 import plus.extvos.logging.annotation.Log;
@@ -29,7 +28,10 @@ import plus.extvos.restlet.utils.DateTrunc;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -93,65 +95,66 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     @SafeVarargs
     protected final QuerySet<T> buildQuerySet(Map<String, Object>... columnMaps) {
         RestletConfig config = SpringContextHolder.getBean(RestletConfig.class);
-        log.debug("buildQuerySet :> config: {}", config);
-        long offset = config.getDefaultPage(), limit = config.getDefaultPageSize();
-        QuerySet<T> qs = new QuerySet<T>(getTableInfo());
-        Map<String, Object> allQueryMap = new LinkedHashMap<>();
-        for (Map<String, Object> m : columnMaps) {
-            if (Validator.notEmpty(m)) {
-                allQueryMap.putAll(m);
-            }
-        }
-        log.debug("buildQuerySet:> params: {}", allQueryMap);
-        if (allQueryMap.containsKey(config.getPageKey())) {
-            log.debug("selectByMap: get offset:> {} {}", config.getPageKey(), allQueryMap.get(config.getPageKey()));
-            offset = Long.parseLong(allQueryMap.get(config.getPageKey()).toString());
-            allQueryMap.remove(config.getPageKey());
-            if (offset < 0) {
-                offset = config.getDefaultPage();
-            }
-        }
-        if (allQueryMap.containsKey(config.getPageSizeKey())) {
-            log.debug("selectByMap: get offset:> {} {}", config.getPageSizeKey(), allQueryMap.get(config.getPageSizeKey()));
-            limit = Long.parseLong(allQueryMap.get(config.getPageSizeKey()).toString());
-            allQueryMap.remove(config.getPageSizeKey());
-//            if (limit < 0) {
-//                limit = config.getDefaultPageSize();
+        return getService().buildQuerySet(config,defaultIncludes(),defaultExcludes(),columnMaps);
+//        log.debug("buildQuerySet :> config: {}", config);
+//        long offset = config.getDefaultPage(), limit = config.getDefaultPageSize();
+//        QuerySet<T> qs = new QuerySet<T>(getTableInfo());
+//        Map<String, Object> allQueryMap = new LinkedHashMap<>();
+//        for (Map<String, Object> m : columnMaps) {
+//            if (Validator.notEmpty(m)) {
+//                allQueryMap.putAll(m);
 //            }
-        }
-
-        if (allQueryMap.containsKey(config.getExcludesKey())) {
-            log.debug("selectByMap: get excludes:> {} {}", config.getExcludesKey(), allQueryMap.get(config.getExcludesKey()));
-            qs.setExcludeCols(new HashSet<>(Arrays.asList(allQueryMap.get(config.getExcludesKey()).toString().split(","))));
-            allQueryMap.remove(config.getExcludesKey());
-        }
-
-        if (allQueryMap.containsKey(config.getIncludesKey())) {
-            log.debug("selectByMap: get includes:> {} {}", config.getIncludesKey(), allQueryMap.get(config.getIncludesKey()));
-            qs.setIncludeCols(new HashSet<>(Arrays.asList(allQueryMap.get(config.getIncludesKey()).toString().split(","))));
-            allQueryMap.remove(config.getIncludesKey());
-        }
-
-        if (allQueryMap.containsKey(config.getOrderByKey())) {
-            log.debug("selectByMap: get orderBy:> {} {}", config.getOrderByKey(), allQueryMap.get(config.getOrderByKey()));
-            qs.setOrderBy(new HashSet<>(Arrays.asList(allQueryMap.get(config.getOrderByKey()).toString().split(","))));
-            allQueryMap.remove(config.getOrderByKey());
-        }
-
-//        QuerySet qs = new QuerySet(offset, limit, columnMap);
-        if (defaultIncludes() != null) {
-            qs.updateIncludeCols(new HashSet<>(Arrays.asList(defaultIncludes())));
-        }
-
-        if (defaultExcludes() != null) {
-            qs.updateExcludeCols(new HashSet<>(Arrays.asList(defaultExcludes())));
-        }
-
-        qs.setPage(offset);
-        qs.setPageSize(limit);
-        qs.setQueries(allQueryMap);
-
-        return qs;
+//        }
+//        log.debug("buildQuerySet:> params: {}", allQueryMap);
+//        if (allQueryMap.containsKey(config.getPageKey())) {
+//            log.debug("selectByMap: get offset:> {} {}", config.getPageKey(), allQueryMap.get(config.getPageKey()));
+//            offset = Long.parseLong(allQueryMap.get(config.getPageKey()).toString());
+//            allQueryMap.remove(config.getPageKey());
+//            if (offset < 0) {
+//                offset = config.getDefaultPage();
+//            }
+//        }
+//        if (allQueryMap.containsKey(config.getPageSizeKey())) {
+//            log.debug("selectByMap: get offset:> {} {}", config.getPageSizeKey(), allQueryMap.get(config.getPageSizeKey()));
+//            limit = Long.parseLong(allQueryMap.get(config.getPageSizeKey()).toString());
+//            allQueryMap.remove(config.getPageSizeKey());
+////            if (limit < 0) {
+////                limit = config.getDefaultPageSize();
+////            }
+//        }
+//
+//        if (allQueryMap.containsKey(config.getExcludesKey())) {
+//            log.debug("selectByMap: get excludes:> {} {}", config.getExcludesKey(), allQueryMap.get(config.getExcludesKey()));
+//            qs.setExcludeCols(new HashSet<>(Arrays.asList(allQueryMap.get(config.getExcludesKey()).toString().split(","))));
+//            allQueryMap.remove(config.getExcludesKey());
+//        }
+//
+//        if (allQueryMap.containsKey(config.getIncludesKey())) {
+//            log.debug("selectByMap: get includes:> {} {}", config.getIncludesKey(), allQueryMap.get(config.getIncludesKey()));
+//            qs.setIncludeCols(new HashSet<>(Arrays.asList(allQueryMap.get(config.getIncludesKey()).toString().split(","))));
+//            allQueryMap.remove(config.getIncludesKey());
+//        }
+//
+//        if (allQueryMap.containsKey(config.getOrderByKey())) {
+//            log.debug("selectByMap: get orderBy:> {} {}", config.getOrderByKey(), allQueryMap.get(config.getOrderByKey()));
+//            qs.setOrderBy(new HashSet<>(Arrays.asList(allQueryMap.get(config.getOrderByKey()).toString().split(","))));
+//            allQueryMap.remove(config.getOrderByKey());
+//        }
+//
+////        QuerySet qs = new QuerySet(offset, limit, columnMap);
+//        if (defaultIncludes() != null) {
+//            qs.updateIncludeCols(new HashSet<>(Arrays.asList(defaultIncludes())));
+//        }
+//
+//        if (defaultExcludes() != null) {
+//            qs.updateExcludeCols(new HashSet<>(Arrays.asList(defaultExcludes())));
+//        }
+//
+//        qs.setPage(offset);
+//        qs.setPageSize(limit);
+//        qs.setQueries(allQueryMap);
+//
+//        return qs;
     }
 
 
