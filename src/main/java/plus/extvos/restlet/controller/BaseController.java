@@ -39,28 +39,48 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     private static final Logger log = LoggerFactory.getLogger(BaseController.class);
 
-    private final boolean creatable;
-    private final boolean updatable;
-    private final boolean deletable;
+    private final boolean _creatable;
+    private final boolean _updatable;
+    private final boolean _deletable;
 
     public BaseController() {
         super();
-        log.debug("BaseController:> Initializing ... {} {}", getGenericType().getName(), getGenericType().isAnnotationPresent(Restlet.class));
+        _creatable = true;
+        _updatable = true;
+        _deletable = true;
+    }
+
+    public boolean creatable() {
         if (getGenericType().isAnnotationPresent(Restlet.class)) {
             Restlet r = getGenericType().getAnnotation(Restlet.class);
-            creatable = r.creatable();
-            updatable = r.updatable();
-            deletable = r.deletable();
+            return r.creatable();
         } else if (this.getClass().isAnnotationPresent(Restlet.class)) {
             Restlet r = this.getClass().getAnnotation(Restlet.class);
-            creatable = r.creatable();
-            updatable = r.updatable();
-            deletable = r.deletable();
-        } else {
-            creatable = true;
-            updatable = true;
-            deletable = true;
+            return r.creatable();
         }
+        return _creatable;
+    }
+
+    public boolean updatable() {
+        if (getGenericType().isAnnotationPresent(Restlet.class)) {
+            Restlet r = getGenericType().getAnnotation(Restlet.class);
+            return r.updatable();
+        } else if (this.getClass().isAnnotationPresent(Restlet.class)) {
+            Restlet r = this.getClass().getAnnotation(Restlet.class);
+            return r.updatable();
+        }
+        return _updatable;
+    }
+
+    public boolean deletable() {
+        if (getGenericType().isAnnotationPresent(Restlet.class)) {
+            Restlet r = getGenericType().getAnnotation(Restlet.class);
+            return r.deletable();
+        } else if (this.getClass().isAnnotationPresent(Restlet.class)) {
+            Restlet r = this.getClass().getAnnotation(Restlet.class);
+            return r.deletable();
+        }
+        return _deletable;
     }
 
     private void updateFieldValue(T entity, String k, Object v) {
@@ -192,34 +212,34 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     /* The following method can be overridden by extended classes */
 
     public T preInsert(T entity) throws ResultException {
-        if (!creatable) {
+        if (!creatable()) {
             throw ResultException.forbidden();
         }
         return entity;
     }
 
     public T preUpdate(Serializable id, T entity) throws ResultException {
-        if (!updatable) {
+        if (!updatable()) {
             throw ResultException.forbidden();
         }
         return entity;
     }
 
     public T preUpdate(QuerySet<T> qs, T entity) throws ResultException {
-        if (!updatable) {
+        if (!updatable()) {
             throw ResultException.forbidden();
         }
         return entity;
     }
 
     public void preDelete(Serializable id) throws ResultException {
-        if (!deletable) {
+        if (!deletable()) {
             throw ResultException.forbidden();
         }
     }
 
     public QuerySet<T> preDelete(QuerySet<T> qs) throws ResultException {
-        if (!deletable) {
+        if (!deletable()) {
             throw ResultException.forbidden();
         }
         return qs;

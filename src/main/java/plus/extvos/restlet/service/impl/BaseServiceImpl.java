@@ -42,7 +42,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
      *
      * @return Class&lt;T&gt;
      */
-    protected Class<?> getGenericType() {
+    public Class<?> getGenericType() {
         Type genericSuperclass = this.getClass().getGenericSuperclass();
         ParameterizedType pt = (ParameterizedType) genericSuperclass;
         Type[] actualTypeArguments = pt.getActualTypeArguments();
@@ -60,9 +60,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     public QuerySet<T> buildQuerySet(RestletConfig config,
-                                              String[] defaultIncludes,
-                                              String[] defaultExcludes,
-                                              Map<String, Object>... columnMaps) {
+                                     String[] defaultIncludes,
+                                     String[] defaultExcludes,
+                                     Map<String, Object>... columnMaps) {
         log.debug("buildQuerySet :> config: {}", config);
         long offset = config.getDefaultPage(), limit = config.getDefaultPageSize();
         QuerySet<T> qs = new QuerySet<T>(getTableInfo());

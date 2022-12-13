@@ -1,7 +1,6 @@
 package plus.extvos.restlet.controller;
 
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
-import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
@@ -26,8 +25,6 @@ import plus.extvos.restlet.service.BaseService;
 import plus.extvos.restlet.utils.DateTrunc;
 
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,22 +36,33 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class BaseROController<T, S extends BaseService<T>> {
 
-    private boolean readable;
+    private boolean _readable;
 
-    protected TableInfo tableInfo;
+//    protected TableInfo tableInfo;
 
     private static final Logger log = LoggerFactory.getLogger(BaseROController.class);
 
     public BaseROController() {
-        log.debug("BaseROController:> Initializing ... {} {}", getGenericType().getName(), getGenericType().isAnnotationPresent(Restlet.class));
-        readable = true;
+//        log.debug("BaseROController:> Initializing ... {} {}", getGenericType().getName(), getGenericType().isAnnotationPresent(Restlet.class));
+        _readable = true;
+//        if (getGenericType().isAnnotationPresent(Restlet.class)) {
+//            Restlet r = getGenericType().getAnnotation(Restlet.class);
+//            readable = r.readable();
+//        } else if (this.getClass().isAnnotationPresent(Restlet.class)) {
+//            Restlet r = this.getClass().getAnnotation(Restlet.class);
+//            readable = r.readable();
+//        }
+    }
+
+    public boolean readable() {
         if (getGenericType().isAnnotationPresent(Restlet.class)) {
             Restlet r = getGenericType().getAnnotation(Restlet.class);
-            readable = r.readable();
+            return r.readable();
         } else if (this.getClass().isAnnotationPresent(Restlet.class)) {
             Restlet r = this.getClass().getAnnotation(Restlet.class);
-            readable = r.readable();
+            return r.readable();
         }
+        return _readable;
     }
 
     /**
@@ -63,10 +71,11 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
      * @return Class&lt;?&gt;
      */
     protected Class<?> getGenericType() {
-        Type genericSuperclass = this.getClass().getGenericSuperclass();
-        ParameterizedType pt = (ParameterizedType) genericSuperclass;
-        Type[] actualTypeArguments = pt.getActualTypeArguments();
-        return (Class<?>) actualTypeArguments[0];
+        return getService().getGenericType();
+//        Type genericSuperclass = this.getClass().getGenericSuperclass();
+//        ParameterizedType pt = (ParameterizedType) genericSuperclass;
+//        Type[] actualTypeArguments = pt.getActualTypeArguments();
+//        return (Class<?>) actualTypeArguments[0];
     }
 
     /**
@@ -80,10 +89,11 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
      * @return bundled table info
      */
     public TableInfo getTableInfo() {
-        if (this.tableInfo == null) {
-            this.tableInfo = TableInfoHelper.getTableInfo(getGenericType());
-        }
-        return this.tableInfo;
+        return getService().getTableInfo();
+//        if (this.tableInfo == null) {
+//            this.tableInfo = TableInfoHelper.getTableInfo(getGenericType());
+//        }
+//        return this.tableInfo;
     }
 
     /**
@@ -96,65 +106,6 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     protected final QuerySet<T> buildQuerySet(Map<String, Object>... columnMaps) {
         RestletConfig config = SpringContextHolder.getBean(RestletConfig.class);
         return getService().buildQuerySet(config,defaultIncludes(),defaultExcludes(),columnMaps);
-//        log.debug("buildQuerySet :> config: {}", config);
-//        long offset = config.getDefaultPage(), limit = config.getDefaultPageSize();
-//        QuerySet<T> qs = new QuerySet<T>(getTableInfo());
-//        Map<String, Object> allQueryMap = new LinkedHashMap<>();
-//        for (Map<String, Object> m : columnMaps) {
-//            if (Validator.notEmpty(m)) {
-//                allQueryMap.putAll(m);
-//            }
-//        }
-//        log.debug("buildQuerySet:> params: {}", allQueryMap);
-//        if (allQueryMap.containsKey(config.getPageKey())) {
-//            log.debug("selectByMap: get offset:> {} {}", config.getPageKey(), allQueryMap.get(config.getPageKey()));
-//            offset = Long.parseLong(allQueryMap.get(config.getPageKey()).toString());
-//            allQueryMap.remove(config.getPageKey());
-//            if (offset < 0) {
-//                offset = config.getDefaultPage();
-//            }
-//        }
-//        if (allQueryMap.containsKey(config.getPageSizeKey())) {
-//            log.debug("selectByMap: get offset:> {} {}", config.getPageSizeKey(), allQueryMap.get(config.getPageSizeKey()));
-//            limit = Long.parseLong(allQueryMap.get(config.getPageSizeKey()).toString());
-//            allQueryMap.remove(config.getPageSizeKey());
-////            if (limit < 0) {
-////                limit = config.getDefaultPageSize();
-////            }
-//        }
-//
-//        if (allQueryMap.containsKey(config.getExcludesKey())) {
-//            log.debug("selectByMap: get excludes:> {} {}", config.getExcludesKey(), allQueryMap.get(config.getExcludesKey()));
-//            qs.setExcludeCols(new HashSet<>(Arrays.asList(allQueryMap.get(config.getExcludesKey()).toString().split(","))));
-//            allQueryMap.remove(config.getExcludesKey());
-//        }
-//
-//        if (allQueryMap.containsKey(config.getIncludesKey())) {
-//            log.debug("selectByMap: get includes:> {} {}", config.getIncludesKey(), allQueryMap.get(config.getIncludesKey()));
-//            qs.setIncludeCols(new HashSet<>(Arrays.asList(allQueryMap.get(config.getIncludesKey()).toString().split(","))));
-//            allQueryMap.remove(config.getIncludesKey());
-//        }
-//
-//        if (allQueryMap.containsKey(config.getOrderByKey())) {
-//            log.debug("selectByMap: get orderBy:> {} {}", config.getOrderByKey(), allQueryMap.get(config.getOrderByKey()));
-//            qs.setOrderBy(new HashSet<>(Arrays.asList(allQueryMap.get(config.getOrderByKey()).toString().split(","))));
-//            allQueryMap.remove(config.getOrderByKey());
-//        }
-//
-////        QuerySet qs = new QuerySet(offset, limit, columnMap);
-//        if (defaultIncludes() != null) {
-//            qs.updateIncludeCols(new HashSet<>(Arrays.asList(defaultIncludes())));
-//        }
-//
-//        if (defaultExcludes() != null) {
-//            qs.updateExcludeCols(new HashSet<>(Arrays.asList(defaultExcludes())));
-//        }
-//
-//        qs.setPage(offset);
-//        qs.setPageSize(limit);
-//        qs.setQueries(allQueryMap);
-//
-//        return qs;
     }
 
 
@@ -355,7 +306,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     }
 
     public void preSelect(Serializable id) throws ResultException {
-        if (!readable) {
+        if (!readable()) {
             throw ResultException.forbidden();
         }
     }
@@ -370,7 +321,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
 
     public QuerySet<T> preSelect(QuerySet<T> qs) throws ResultException {
-        if (!readable) {
+        if (!readable()) {
             throw ResultException.forbidden();
         }
         return qs;

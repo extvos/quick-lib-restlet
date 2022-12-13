@@ -1,6 +1,7 @@
 package plus.extvos.restlet.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
 import org.apache.ibatis.annotations.Param;
 import plus.extvos.common.exception.ResultException;
@@ -16,6 +17,18 @@ import java.util.Map;
  * @author Mingcai SHEN
  */
 public interface BaseService<T> {
+
+    /**
+     * Get generic type of entity
+     * @return
+     */
+    Class<?> getGenericType();
+
+    /**
+     * Get table info
+     * @return
+     */
+    TableInfo getTableInfo();
 
     /**
      * Build QuerySet from request map params and configurations.
