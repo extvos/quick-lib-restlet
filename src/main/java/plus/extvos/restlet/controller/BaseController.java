@@ -83,7 +83,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         return _deletable;
     }
 
-    private void updateFieldValue(T entity, String k, Object v) {
+    protected void updateFieldValue(T entity, String k, Object v) {
         try {
             Field f = entity.getClass().getDeclaredField(k);
             if (null != f) {
