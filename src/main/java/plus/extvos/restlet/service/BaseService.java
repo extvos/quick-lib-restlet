@@ -186,6 +186,8 @@ public interface BaseService<T> {
      */
     T selectById(Serializable id) throws ResultException;
 
+    List<T> selectByBatchIds(Serializable ...ids) throws ResultException;
+
     /**
      * select by queries
      *

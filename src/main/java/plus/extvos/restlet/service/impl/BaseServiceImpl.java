@@ -362,11 +362,13 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
-//        if (null == obj) {
-//            throw ResultException.notFound("record of id not found");
-//        }
         return obj;
 
+    }
+
+    @Override
+    public List<T> selectByBatchIds(Serializable... ids) throws ResultException {
+        return getMapper().selectBatchIds(Arrays.stream(ids).collect(Collectors.toList()));
     }
 
     @Override
