@@ -455,7 +455,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
             ls.addAll(Arrays.stream(aggregations).map(Aggregation::expression).collect(Collectors.toList()));
         }
         qw.select(ls.toArray(new String[0]));
-        qw.groupBy(fields);
+        qw.groupBy(Arrays.stream(fields).collect(Collectors.toList()));
         qw = querySetFinish(querySet, qw);
         return getMapper().selectMaps(qw);
     }
@@ -479,7 +479,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
             ls.addAll(Arrays.stream(aggregations).map(Aggregation::expression).collect(Collectors.toList()));
         }
         qw.select(ls.toArray(new String[0]));
-        qw.groupBy(groups.toArray(new String[0]));
+        qw.groupBy(groups);
         return getMapper().selectMaps(qw);
     }
 
