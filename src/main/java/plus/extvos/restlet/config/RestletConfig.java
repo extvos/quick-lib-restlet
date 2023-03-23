@@ -146,4 +146,18 @@ public class RestletConfig {
     public void setDeleteResponseBody(boolean deleteResponseBody) {
         this.deleteResponseBody = deleteResponseBody;
     }
+
+    public static RestletConfig defaultConfig() {
+        RestletConfig cfg = new RestletConfig();
+        cfg.setDefaultPage(0);
+        cfg.setDefaultPageSize(50);
+        cfg.setLogTrace(false);
+        cfg.setIncludesKey("__includes");
+        cfg.setExcludesKey("__excludes");
+        cfg.setPageKey("__page");
+        cfg.setPageSizeKey("__pageSize");
+        cfg.setPrettyJson(false);
+        cfg.setOrderByKey("__orderBy");
+        return cfg;
+    }
 }

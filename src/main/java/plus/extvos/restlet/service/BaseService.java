@@ -42,6 +42,24 @@ public interface BaseService<T> {
                               String[] defaultIncludes,
                               String[] defaultExcludes,
                               Map<String, Object>... columnMaps);
+
+    /**
+     * Build QuerySet from request map params and configurations.
+     * @param defaultIncludes
+     * @param defaultExcludes
+     * @param columnMaps
+     * @return
+     */
+    QuerySet<T> buildQuerySet(String[] defaultIncludes,
+                              String[] defaultExcludes,
+                              Map<String, Object>... columnMaps);
+
+    /**
+     * Build QuerySet from request map params and configurations.
+     * @param columnMaps
+     * @return
+     */
+    QuerySet<T> buildQuerySet(Map<String, Object>... columnMaps);
     /**
      * Insert a new entity
      *

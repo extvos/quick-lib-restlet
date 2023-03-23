@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import plus.extvos.common.Assert;
 import plus.extvos.common.Validator;
 import plus.extvos.common.exception.ResultException;
+import plus.extvos.common.utils.SpringContextHolder;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.config.RestletConfig;
 import plus.extvos.restlet.service.Aggregation;
@@ -63,6 +64,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
                                      String[] defaultIncludes,
                                      String[] defaultExcludes,
                                      Map<String, Object>... columnMaps) {
+        config = config == null ? RestletConfig.defaultConfig() : config;
         log.debug("buildQuerySet :> config: {}", config);
         long offset = config.getDefaultPage(), limit = config.getDefaultPageSize();
         QuerySet<T> qs = new QuerySet<T>(getTableInfo());
@@ -122,6 +124,32 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         qs.setQueries(allQueryMap);
 
         return qs;
+    }
+
+    /**
+     * Build QuerySet from request map params and configurations.
+     *
+     * @param defaultIncludes
+     * @param defaultExcludes
+     * @param columnMaps
+     * @return
+     */
+    @Override
+    public QuerySet<T> buildQuerySet(String[] defaultIncludes, String[] defaultExcludes, Map<String, Object>... columnMaps) {
+        RestletConfig config = SpringContextHolder.getBean(RestletConfig.class);
+        return buildQuerySet(config, defaultIncludes, defaultExcludes, columnMaps);
+    }
+
+    /**
+     * Build QuerySet from request map params and configurations.
+     *
+     * @param columnMaps
+     * @return
+     */
+    @Override
+    public QuerySet<T> buildQuerySet(Map<String, Object>... columnMaps) {
+        RestletConfig config = SpringContextHolder.getBean(RestletConfig.class);
+        return buildQuerySet(config, null, null, columnMaps);
     }
 
     @Override
