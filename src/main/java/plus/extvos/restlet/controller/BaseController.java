@@ -108,6 +108,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     public Result<T> insertNew(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @Validated(OnCreate.class) @RequestBody T record) throws ResultException {
+        predicate(pathMap, null, null);
         log.debug("insertNew:> {}, {}", pathMap, record);
         if (Validator.notEmpty(pathMap)) {
             for (String k : pathMap.keySet()) {
@@ -155,6 +156,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap,
             @Validated(OnUpdate.class) @RequestBody T record) throws ResultException {
+        predicate(pathMap, queryMap, null);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         if (updatedCols(record) <= 0) {
             throw ResultException.badRequest("no field to update");
@@ -188,6 +190,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     public Result<Integer> deleteByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        predicate(pathMap, queryMap, null);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         int deleted = 0;
         if (pathMap != null && pathMap.containsKey("id")) {

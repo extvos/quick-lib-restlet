@@ -105,7 +105,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     @SafeVarargs
     protected final QuerySet<T> buildQuerySet(Map<String, Object>... columnMaps) {
         RestletConfig config = SpringContextHolder.getBean(RestletConfig.class);
-        return getService().buildQuerySet(config,defaultIncludes(),defaultExcludes(),columnMaps);
+        return getService().buildQuerySet(config, defaultIncludes(), defaultExcludes(), columnMaps);
     }
 
 
@@ -122,6 +122,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<List<T>> selectByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        predicate(pathMap, queryMap, null);
         log.debug("BaseROController<{}>::selectByMap:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
@@ -140,6 +141,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<Long> countByQuery(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        predicate(pathMap, queryMap, null);
         log.debug("BaseROController<{}>::countByQuery:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
@@ -154,6 +156,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<Map<Object, Long>> countByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        predicate(pathMap, queryMap, null);
         log.debug("BaseROController<{}>::countByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         Assert.notNull(pathMap, ResultException.badRequest());
         Assert.isTrue(pathMap.containsKey("fieldName"), ResultException.badRequest("fieldName required"));
@@ -172,6 +175,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<List<Map<String, Object>>> aggregateByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        predicate(pathMap, queryMap, null);
         log.debug("BaseROController<{}>::aggregateByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         Assert.notNull(pathMap, ResultException.badRequest());
         Assert.isTrue(pathMap.containsKey("fieldName"), ResultException.badRequest("fieldName required"));
@@ -215,6 +219,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<List<Map<String, Object>>> trendByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
+        predicate(pathMap, queryMap, null);
         log.debug("BaseROController<{}>::trendByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         Assert.notNull(pathMap, ResultException.badRequest());
         AtomicReference<String> groupBy = new AtomicReference<>();
@@ -262,6 +267,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<T> selectById(
             @PathVariable Serializable id,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
+        predicate(null, columnMap, id);
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
         id = convertId(id);
         QuerySet<T> qs = buildQuerySet(columnMap);
@@ -303,6 +309,9 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     public String[] defaultExcludes() {
         return null;
+    }
+
+    public void predicate(Map<String, Object> pathVariables, Map<String, Object> queries, Serializable id) throws ResultException {
     }
 
     public void preSelect(Serializable id) throws ResultException {
