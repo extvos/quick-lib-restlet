@@ -1,5 +1,6 @@
 package plus.extvos.restlet.controller;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
@@ -132,6 +133,10 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             if ("class".equals(pd.getName())) {
                 continue;
             }
+            TableField tf = pd.getPropertyType().getAnnotation(TableField.class);
+            if (tf != null && !tf.exist()) {
+                continue;
+            }
             if (pd.getPropertyType().isPrimitive()) {
 //                updatedCols += 1;
                 throw ResultException.notImplemented("primitive property '" + pd.getName() + "' for entity is not allowed");
@@ -158,23 +163,27 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             @Validated(OnUpdate.class) @RequestBody T record) throws ResultException {
         predicate(pathMap, queryMap, null);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
-        if (updatedCols(record) <= 0) {
-            throw ResultException.badRequest("no field to update");
-        }
+//        if (updatedCols(record) <= 0) {
+//            throw ResultException.badRequest("no field to update");
+//        }
         int updated = 0;
         if (pathMap != null && pathMap.containsKey("id")) {
             Serializable id = convertId(pathMap.get("id").toString());
             record = preUpdate(id, record);
-            updated = getService().updateById(id, record);
+            if (updatedCols(record) > 0) {
+                updated = getService().updateById(id, record);
+            }
             postUpdate(id, record);
         } else {
             record = preUpdate(qs, record);
-            if (Validator.notEmpty(pathMap)) {
-                for (String k : pathMap.keySet()) {
-                    updateFieldValue(record, k, pathMap.get(k));
+            if (updatedCols(record) > 0) {
+                if (Validator.notEmpty(pathMap)) {
+                    for (String k : pathMap.keySet()) {
+                        updateFieldValue(record, k, pathMap.get(k));
+                    }
                 }
+                updated = getService().updateByMap(qs, record);
             }
-            updated = getService().updateByMap(qs, record);
             postUpdate(qs, record);
         }
         Result<T> ret = Result.data(record).success();
