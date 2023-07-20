@@ -1,6 +1,7 @@
 package plus.extvos.restlet.controller;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
@@ -129,12 +130,26 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     private int updatedCols(T record) {
         int updatedCols = 0;
+        if (null == record) {
+            return updatedCols;
+        }
+//        log.debug("updatedCols:> Class: {}", record.getClass().getName());
         for (PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(record.getClass())) {
+//            log.debug("updatedCols:> Property: {} ", pd.getName());
             if ("class".equals(pd.getName())) {
                 continue;
             }
-            TableField tf = pd.getPropertyType().getAnnotation(TableField.class);
-            if (tf != null && !tf.exist()) {
+//            TableField tf = pd.getPropertyType().getAnnotation(TableField.class);
+            TableField tf = null;
+            TableId tid = null;
+            try {
+                tf = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableField.class);
+                tid = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableId.class);
+            } catch (NoSuchFieldException e) {
+//                throw new RuntimeException(e);
+            }
+//            log.debug("updatedCols:> Property: {} / {} ", pd.getName(), tf);
+            if (tf != null && (!tf.exist() || tid != null)) {
                 continue;
             }
             if (pd.getPropertyType().isPrimitive()) {
@@ -144,6 +159,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             }
             try {
                 Object o = pd.getReadMethod().invoke(record);
+//                log.debug("updatedCols:> Property: {} = {} ", pd.getName(), o);
                 if (null != o) {
                     updatedCols += 1;
                 }
