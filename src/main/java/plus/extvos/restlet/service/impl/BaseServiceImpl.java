@@ -172,7 +172,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     public int insert(@NotNull List<T> entities) throws ResultException {
         int n;
         try {
-            n = entities.stream().mapToInt(entity -> getMapper().insert(entity)).sum();
+            n = entities.stream().mapToInt(this::insert).sum();
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
@@ -198,14 +198,12 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
             f.setAccessible(true);
             Serializable id = (Serializable) f.get(entity);
             if (null != id) {
-                QueryWrapper<T> qw = new QueryWrapper<T>();
-                qw = qw.eq(getTableInfo().getKeyColumn(), id);
-                int n = getMapper().update(entity, qw);
+                int n = updateById(id, entity);
                 if (n > 0) {
                     return n;
                 }
             }
-            return getMapper().insert(entity);
+            return insert(entity);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw ResultException.internalServerError(e.getMessage());
         }
@@ -221,36 +219,16 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int replace(@NotNull List<T> entities) throws ResultException {
-        if (entities.size() < 1) {
-            return 0;
-        }
-        int totalReplaced = 0;
-        Class<?> c = entities.get(0).getClass();
-        Field f = null;
+        int n;
         try {
-            f = c.getDeclaredField(tableInfo.getKeyColumn());
-        } catch (NoSuchFieldException e) {
+            n = entities.stream().mapToInt(this::replace).sum();
+        } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
-        f.setAccessible(true);
-        for (T entity : entities) {
-            try {
-                Serializable id = (Serializable) f.get(entity);
-                if (null != id) {
-                    QueryWrapper<T> qw = new QueryWrapper<T>();
-                    qw = qw.eq(getTableInfo().getKeyColumn(), id);
-                    int n = getMapper().update(entity, qw);
-                    if (n > 0) {
-                        totalReplaced += 1;
-                        continue;
-                    }
-                }
-                totalReplaced += getMapper().insert(entity);
-            } catch (IllegalAccessException e) {
-                throw ResultException.internalServerError(e.getMessage());
-            }
+        if (n < 1) {
+            throw ResultException.internalServerError("replace record failed?");
         }
-        return totalReplaced;
+        return n;
     }
 
     @Override
@@ -338,7 +316,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     }
 
     private QueryWrapper<T> querySetFinish(@NotNull QuerySet<T> querySet, @NotNull QueryWrapper<T> queryWrapper) {
-        if (querySet.getOrderBy() != null && querySet.getOrderBy().size() > 0) {
+        if (querySet.getOrderBy() != null && !querySet.getOrderBy().isEmpty()) {
             QueryWrapper<T> finalQw = queryWrapper;
             querySet.getOrderBy().forEach((String s) -> {
                 if (s.startsWith("-")) {
