@@ -1,5 +1,7 @@
 package plus.extvos.restlet.service.impl;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -7,6 +9,7 @@ import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import plus.extvos.common.Assert;
 import plus.extvos.common.Validator;
@@ -20,8 +23,10 @@ import plus.extvos.restlet.service.QueryBuilder;
 import plus.extvos.restlet.utils.DateTrunc;
 
 import javax.validation.constraints.NotNull;
+import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -156,6 +161,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     @Transactional(rollbackFor = Exception.class)
     public int insert(@NotNull T entity) throws ResultException {
         int n = 0;
+        if (updatedCols(entity) <= 0) {
+            throw ResultException.badRequest("empty values for all fields is not allowed");
+        }
         try {
             n = getMapper().insert(entity);
         } catch (Exception e) {
@@ -276,6 +284,39 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         return getMapper().deleteBatchIds(idList);
     }
 
+    private int updatedCols(T record) {
+        int updatedCols = 0;
+        if (null == record) {
+            return updatedCols;
+        }
+        for (PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(record.getClass())) {
+            if ("class".equals(pd.getName())) {
+                continue;
+            }
+            TableField tf = null;
+            TableId tid = null;
+            try {
+                tf = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableField.class);
+                tid = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableId.class);
+            } catch (NoSuchFieldException e) {
+            }
+            if (tf != null && (!tf.exist() || tid != null)) {
+                continue;
+            }
+            if (pd.getPropertyType().isPrimitive()) {
+                throw ResultException.notImplemented("primitive property '" + pd.getName() + "' for entity is not allowed");
+            }
+            try {
+                Object o = pd.getReadMethod().invoke(record);
+                if (null != o) {
+                    updatedCols += 1;
+                }
+            } catch (IllegalAccessException | InvocationTargetException ignore) {
+            }
+        }
+        return updatedCols;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int updateById(@NotNull Serializable id, @NotNull T entity) throws ResultException {
@@ -283,7 +324,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         try {
             QueryWrapper<T> qw = new QueryWrapper<T>();
             qw = qw.eq(getTableInfo().getKeyColumn(), id);
-            n = getMapper().update(entity, qw);
+            if (updatedCols(entity) > 0) {
+                n = getMapper().update(entity, qw);
+            }
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
@@ -298,7 +341,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
     public int updateByMap(@NotNull QuerySet<T> querySet, @NotNull T entity) throws ResultException {
         int n = 0;
         try {
-            n = getMapper().update(entity, querySet.buildQueryWrapper(this));
+            if (updatedCols(entity) > 0) {
+                n = getMapper().update(entity, querySet.buildQueryWrapper(this));
+            }
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }

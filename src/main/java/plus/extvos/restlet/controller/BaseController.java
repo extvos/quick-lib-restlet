@@ -118,9 +118,6 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             }
         }
         record = preInsert(record);
-        if (updatedCols(record) <= 0) {
-            throw ResultException.badRequest("empty values for all fields is not allowed");
-        }
         int n = getService().insert(record);
         postInsert(record);
         Result<T> ret = Result.data(record).success(ResultCode.CREATED);
@@ -128,46 +125,46 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         return ret;
     }
 
-    private int updatedCols(T record) {
-        int updatedCols = 0;
-        if (null == record) {
-            return updatedCols;
-        }
-//        log.debug("updatedCols:> Class: {}", record.getClass().getName());
-        for (PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(record.getClass())) {
-//            log.debug("updatedCols:> Property: {} ", pd.getName());
-            if ("class".equals(pd.getName())) {
-                continue;
-            }
-//            TableField tf = pd.getPropertyType().getAnnotation(TableField.class);
-            TableField tf = null;
-            TableId tid = null;
-            try {
-                tf = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableField.class);
-                tid = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableId.class);
-            } catch (NoSuchFieldException e) {
-//                throw new RuntimeException(e);
-            }
-//            log.debug("updatedCols:> Property: {} / {} ", pd.getName(), tf);
-            if (tf != null && (!tf.exist() || tid != null)) {
-                continue;
-            }
-            if (pd.getPropertyType().isPrimitive()) {
-//                updatedCols += 1;
-                throw ResultException.notImplemented("primitive property '" + pd.getName() + "' for entity is not allowed");
+//    private int updatedCols(T record) {
+//        int updatedCols = 0;
+//        if (null == record) {
+//            return updatedCols;
+//        }
+////        log.debug("updatedCols:> Class: {}", record.getClass().getName());
+//        for (PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(record.getClass())) {
+////            log.debug("updatedCols:> Property: {} ", pd.getName());
+//            if ("class".equals(pd.getName())) {
 //                continue;
-            }
-            try {
-                Object o = pd.getReadMethod().invoke(record);
-//                log.debug("updatedCols:> Property: {} = {} ", pd.getName(), o);
-                if (null != o) {
-                    updatedCols += 1;
-                }
-            } catch (IllegalAccessException | InvocationTargetException ignore) {
-            }
-        }
-        return updatedCols;
-    }
+//            }
+////            TableField tf = pd.getPropertyType().getAnnotation(TableField.class);
+//            TableField tf = null;
+//            TableId tid = null;
+//            try {
+//                tf = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableField.class);
+//                tid = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableId.class);
+//            } catch (NoSuchFieldException e) {
+////                throw new RuntimeException(e);
+//            }
+////            log.debug("updatedCols:> Property: {} / {} ", pd.getName(), tf);
+//            if (tf != null && (!tf.exist() || tid != null)) {
+//                continue;
+//            }
+//            if (pd.getPropertyType().isPrimitive()) {
+////                updatedCols += 1;
+//                throw ResultException.notImplemented("primitive property '" + pd.getName() + "' for entity is not allowed");
+////                continue;
+//            }
+//            try {
+//                Object o = pd.getReadMethod().invoke(record);
+////                log.debug("updatedCols:> Property: {} = {} ", pd.getName(), o);
+//                if (null != o) {
+//                    updatedCols += 1;
+//                }
+//            } catch (IllegalAccessException | InvocationTargetException ignore) {
+//            }
+//        }
+//        return updatedCols;
+//    }
 
     @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @PutMapping(value = {"", "/{id}"})
@@ -186,20 +183,16 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         if (pathMap != null && pathMap.containsKey("id")) {
             Serializable id = convertId(pathMap.get("id").toString());
             record = preUpdate(id, record);
-            if (updatedCols(record) > 0) {
-                updated = getService().updateById(id, record);
-            }
+            updated = getService().updateById(id, record);
             postUpdate(id, record);
         } else {
             record = preUpdate(qs, record);
-            if (updatedCols(record) > 0) {
-                if (Validator.notEmpty(pathMap)) {
-                    for (String k : pathMap.keySet()) {
-                        updateFieldValue(record, k, pathMap.get(k));
-                    }
+            if (Validator.notEmpty(pathMap)) {
+                for (String k : pathMap.keySet()) {
+                    updateFieldValue(record, k, pathMap.get(k));
                 }
-                updated = getService().updateByMap(qs, record);
             }
+            updated = getService().updateByMap(qs, record);
             postUpdate(qs, record);
         }
         Result<T> ret = Result.data(record).success();
