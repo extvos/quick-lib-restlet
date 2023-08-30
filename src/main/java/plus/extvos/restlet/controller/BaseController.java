@@ -21,6 +21,7 @@ import plus.extvos.logging.annotation.Log;
 import plus.extvos.logging.annotation.type.LogAction;
 import plus.extvos.logging.annotation.type.LogLevel;
 import plus.extvos.restlet.QuerySet;
+import plus.extvos.restlet.annotation.ActionType;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
 import plus.extvos.restlet.intfs.OnCreate;
@@ -92,14 +93,8 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
                 f.setAccessible(true);
                 f.set(entity, PrimitiveConvert.from(v.toString()).to(f.getType()));
             }
-//                    PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(record.getClass(), k);
-//                    if (null == pd) {
-//                        continue;
-//                    }
-//                    pd.getWriteMethod().invoke(record, PrimitiveConvert.from(pathMap.get(k).toString()).to(pd.getPropertyType()));
         } catch (IllegalAccessException | NoSuchFieldException e) {
             log.error(">>", e);
-//                    e.printStackTrace();
         }
     }
 
@@ -110,7 +105,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     public Result<T> insertNew(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @Validated(OnCreate.class) @RequestBody T record) throws ResultException {
-        predicate(pathMap, null, null);
+        predicate(ActionType.CREATE, pathMap, null, null);
         log.debug("insertNew:> {}, {}", pathMap, record);
         if (Validator.notEmpty(pathMap)) {
             for (String k : pathMap.keySet()) {
@@ -125,46 +120,6 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
         return ret;
     }
 
-//    private int updatedCols(T record) {
-//        int updatedCols = 0;
-//        if (null == record) {
-//            return updatedCols;
-//        }
-////        log.debug("updatedCols:> Class: {}", record.getClass().getName());
-//        for (PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(record.getClass())) {
-////            log.debug("updatedCols:> Property: {} ", pd.getName());
-//            if ("class".equals(pd.getName())) {
-//                continue;
-//            }
-////            TableField tf = pd.getPropertyType().getAnnotation(TableField.class);
-//            TableField tf = null;
-//            TableId tid = null;
-//            try {
-//                tf = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableField.class);
-//                tid = record.getClass().getDeclaredField(pd.getName()).getAnnotation(TableId.class);
-//            } catch (NoSuchFieldException e) {
-////                throw new RuntimeException(e);
-//            }
-////            log.debug("updatedCols:> Property: {} / {} ", pd.getName(), tf);
-//            if (tf != null && (!tf.exist() || tid != null)) {
-//                continue;
-//            }
-//            if (pd.getPropertyType().isPrimitive()) {
-////                updatedCols += 1;
-//                throw ResultException.notImplemented("primitive property '" + pd.getName() + "' for entity is not allowed");
-////                continue;
-//            }
-//            try {
-//                Object o = pd.getReadMethod().invoke(record);
-////                log.debug("updatedCols:> Property: {} = {} ", pd.getName(), o);
-//                if (null != o) {
-//                    updatedCols += 1;
-//                }
-//            } catch (IllegalAccessException | InvocationTargetException ignore) {
-//            }
-//        }
-//        return updatedCols;
-//    }
 
     @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @PutMapping(value = {"", "/{id}"})
@@ -174,11 +129,9 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap,
             @Validated(OnUpdate.class) @RequestBody T record) throws ResultException {
-        predicate(pathMap, queryMap, null);
+        predicate(ActionType.UPDATE, pathMap, queryMap, null);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
-//        if (updatedCols(record) <= 0) {
-//            throw ResultException.badRequest("no field to update");
-//        }
+
         int updated = 0;
         if (pathMap != null && pathMap.containsKey("id")) {
             Serializable id = convertId(pathMap.get("id").toString());
@@ -208,7 +161,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
     public Result<Integer> deleteByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
-        predicate(pathMap, queryMap, null);
+        predicate(ActionType.DELETE, pathMap, queryMap, null);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         int deleted = 0;
         if (pathMap != null && pathMap.containsKey("id")) {

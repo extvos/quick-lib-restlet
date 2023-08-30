@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import plus.extvos.logging.annotation.Log;
 import plus.extvos.logging.annotation.type.LogAction;
 import plus.extvos.logging.annotation.type.LogLevel;
 import plus.extvos.restlet.QuerySet;
+import plus.extvos.restlet.annotation.ActionType;
 import plus.extvos.restlet.annotation.Restlet;
 import plus.extvos.restlet.config.RestletConfig;
 import plus.extvos.restlet.service.Aggregation;
@@ -38,20 +40,10 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     private boolean _readable;
 
-//    protected TableInfo tableInfo;
-
     private static final Logger log = LoggerFactory.getLogger(BaseROController.class);
 
     public BaseROController() {
-//        log.debug("BaseROController:> Initializing ... {} {}", getGenericType().getName(), getGenericType().isAnnotationPresent(Restlet.class));
         _readable = true;
-//        if (getGenericType().isAnnotationPresent(Restlet.class)) {
-//            Restlet r = getGenericType().getAnnotation(Restlet.class);
-//            readable = r.readable();
-//        } else if (this.getClass().isAnnotationPresent(Restlet.class)) {
-//            Restlet r = this.getClass().getAnnotation(Restlet.class);
-//            readable = r.readable();
-//        }
     }
 
     public boolean readable() {
@@ -72,10 +64,6 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
      */
     protected Class<?> getGenericType() {
         return getService().getGenericType();
-//        Type genericSuperclass = this.getClass().getGenericSuperclass();
-//        ParameterizedType pt = (ParameterizedType) genericSuperclass;
-//        Type[] actualTypeArguments = pt.getActualTypeArguments();
-//        return (Class<?>) actualTypeArguments[0];
     }
 
     /**
@@ -90,10 +78,22 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
      */
     public TableInfo getTableInfo() {
         return getService().getTableInfo();
-//        if (this.tableInfo == null) {
-//            this.tableInfo = TableInfoHelper.getTableInfo(getGenericType());
-//        }
-//        return this.tableInfo;
+    }
+
+    protected void checkRole(String s) {
+        SecurityUtils.getSubject().checkRole(s);
+    }
+
+    protected void checkPermission(String s) {
+        SecurityUtils.getSubject().checkPermission(s);
+    }
+
+    protected boolean hasRole(String s) {
+        return SecurityUtils.getSubject().hasRole(s);
+    }
+
+    protected boolean isPermitted(String s) {
+        return SecurityUtils.getSubject().isPermitted(s);
     }
 
     /**
@@ -122,7 +122,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<List<T>> selectByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
-        predicate(pathMap, queryMap, null);
+        predicate(ActionType.READ, pathMap, queryMap, null);
         log.debug("BaseROController<{}>::selectByMap:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
@@ -141,7 +141,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<Long> countByQuery(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
-        predicate(pathMap, queryMap, null);
+        predicate(ActionType.READ, pathMap, queryMap, null);
         log.debug("BaseROController<{}>::countByQuery:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
         qs = preSelect(qs);
@@ -156,7 +156,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<Map<Object, Long>> countByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
-        predicate(pathMap, queryMap, null);
+        predicate(ActionType.READ, pathMap, queryMap, null);
         log.debug("BaseROController<{}>::countByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         Assert.notNull(pathMap, ResultException.badRequest());
         Assert.isTrue(pathMap.containsKey("fieldName"), ResultException.badRequest("fieldName required"));
@@ -175,7 +175,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<List<Map<String, Object>>> aggregateByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
-        predicate(pathMap, queryMap, null);
+        predicate(ActionType.READ, pathMap, queryMap, null);
         log.debug("BaseROController<{}>::aggregateByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         Assert.notNull(pathMap, ResultException.badRequest());
         Assert.isTrue(pathMap.containsKey("fieldName"), ResultException.badRequest("fieldName required"));
@@ -202,24 +202,13 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         return Result.data(ret).success();
     }
 
-//    @ApiOperation(value = "获取一段时间分段", notes = "该操作不查询任何实体数据库表")
-//    @GetMapping("_trend/{interval}")
-//    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Get a timeline ")
-//    public Result<List<Map<String, Object>>> trendTimeline(
-//            @PathVariable("interval") String interval,
-//            @RequestParam("begin") Timestamp begin,
-//            @RequestParam("end") Timestamp end
-//    ) throws ResultException {
-//        return Result.data(getService().trendTimeline(interval, begin, end)).success();
-//    }
-
     @ApiOperation(value = "按查询条件根据时间字段字段分组聚合统计", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @GetMapping("/_trend/{fieldName}/{interval}")
     @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Aggregate by timestamp and field grouping")
     public Result<List<Map<String, Object>>> trendByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
-        predicate(pathMap, queryMap, null);
+        predicate(ActionType.READ, pathMap, queryMap, null);
         log.debug("BaseROController<{}>::trendByField:1 parameters: {} {}", getService().getClass().getName(), queryMap, pathMap);
         Assert.notNull(pathMap, ResultException.badRequest());
         AtomicReference<String> groupBy = new AtomicReference<>();
@@ -267,7 +256,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
     public Result<T> selectById(
             @PathVariable Serializable id,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
-        predicate(null, columnMap, id);
+        predicate(ActionType.READ, null, columnMap, id);
         log.debug("BaseROController:>{} selectById({}) with {}", getService().getClass().getName(), id, columnMap);
         id = convertId(id);
         QuerySet<T> qs = buildQuerySet(columnMap);
@@ -295,11 +284,6 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
             throw ResultException.badRequest(e.getMessage());
         }
 
-//        try {
-//            Object nid = getTableInfo().getKeyType().newInstance();
-//        } catch (InstantiationException | IllegalAccessException e) {
-//            return id;
-//        }
     }
 
     /* The following method can be overridden by extended classes */
@@ -311,7 +295,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
         return null;
     }
 
-    public void predicate(Map<String, Object> pathVariables, Map<String, Object> queries, Serializable id) throws ResultException {
+    public void predicate(ActionType action, Map<String, Object> pathVariables, Map<String, Object> queries, Serializable id) throws ResultException {
     }
 
     public void preSelect(Serializable id) throws ResultException {
