@@ -100,7 +100,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     @ApiOperation(value = "插入一条新记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @PostMapping()
-    @Log(action = LogAction.CREATE, level = LogLevel.IMPORTANT, comment = "Generic CREATE")
+    @Log(action = LogAction.CREATE, level = LogLevel.IMPORTANT)
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public Result<T> insertNew(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
@@ -123,7 +123,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     @ApiOperation(value = "按条件更新记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @PutMapping(value = {"", "/{id}"})
-    @Log(action = LogAction.UPDATE, level = LogLevel.IMPORTANT, comment = "Generic UPDATE")
+    @Log(action = LogAction.UPDATE, level = LogLevel.IMPORTANT)
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public Result<T> updateByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
@@ -156,7 +156,7 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
 
     @ApiOperation(value = "按条件删除记录", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @DeleteMapping(value = {"", "/{id}"})
-    @Log(action = LogAction.DELETE, level = LogLevel.IMPORTANT, comment = "Generic DELETE")
+    @Log(action = LogAction.DELETE, level = LogLevel.IMPORTANT)
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public Result<Integer> deleteByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,

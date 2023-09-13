@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiParam;
 import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +19,7 @@ import plus.extvos.common.utils.SpringContextHolder;
 import plus.extvos.logging.annotation.Log;
 import plus.extvos.logging.annotation.type.LogAction;
 import plus.extvos.logging.annotation.type.LogLevel;
+import plus.extvos.logging.service.LogDispatchService;
 import plus.extvos.restlet.QuerySet;
 import plus.extvos.restlet.annotation.ActionType;
 import plus.extvos.restlet.annotation.Restlet;
@@ -118,7 +120,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
             @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping()
-    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic SELECT multiple rows")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL)
     public Result<List<T>> selectByMap(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
@@ -137,7 +139,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     @ApiOperation(value = "按查询条件统计数量", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @GetMapping("/_count")
-    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic COUNT multiple rows")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL)
     public Result<Long> countByQuery(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
@@ -152,7 +154,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     @ApiOperation(value = "按查询条件根据字段分组统计数量", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @GetMapping("/_count/{fieldName}")
-    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "COUNT by field grouping")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL)
     public Result<Map<Object, Long>> countByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
@@ -171,7 +173,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     @ApiOperation(value = "按查询条件根据字段分组聚合统计", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @GetMapping("/_aggregate/{fieldName}")
-    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Aggregate by field grouping")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL)
     public Result<List<Map<String, Object>>> aggregateByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
@@ -204,7 +206,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
 
     @ApiOperation(value = "按查询条件根据时间字段字段分组聚合统计", notes = "查询条件组织，请参考： https://github.com/extvos/quick-lib-restlet/blob/develop/README.md")
     @GetMapping("/_trend/{fieldName}/{interval}")
-    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Aggregate by timestamp and field grouping")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL)
     public Result<List<Map<String, Object>>> trendByField(
             @ApiParam(hidden = true) @PathVariable(required = false) Map<String, Object> pathMap,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> queryMap) throws ResultException {
@@ -252,7 +254,7 @@ public abstract class BaseROController<T, S extends BaseService<T>> {
             @ApiImplicitParam(name = "__excludes", required = false, defaultValue = "")
     })
     @GetMapping("/{id}")
-    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL, comment = "Generic Select by Id")
+    @Log(action = LogAction.SELECT, level = LogLevel.NORMAL)
     public Result<T> selectById(
             @PathVariable Serializable id,
             @ApiParam(hidden = true) @RequestParam(required = false) Map<String, Object> columnMap) throws ResultException {
