@@ -531,6 +531,7 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         }
         qw.select(ls.toArray(new String[0]));
         qw.groupBy(groups);
+        qw.orderByAsc(fieldName);
         return getMapper().selectMaps(qw);
     }
 
