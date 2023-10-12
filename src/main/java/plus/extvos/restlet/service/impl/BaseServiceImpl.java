@@ -330,9 +330,9 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         } catch (Exception e) {
             throw ResultException.internalServerError(e.getMessage());
         }
-        if (n != 1) {
-            throw ResultException.notFound("record of id not found");
-        }
+//        if (n != 1) {
+//            throw ResultException.notFound("record of id not found");
+//        }
         return n;
     }
 
