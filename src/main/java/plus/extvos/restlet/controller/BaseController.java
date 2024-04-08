@@ -131,7 +131,11 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             @Validated(OnUpdate.class) @RequestBody T record) throws ResultException {
         predicate(ActionType.UPDATE, pathMap, queryMap, null);
         QuerySet<T> qs = buildQuerySet(pathMap, queryMap);
-
+        if (Validator.notEmpty(pathMap)) {
+            for (String k : pathMap.keySet()) {
+                updateFieldValue(record, k, pathMap.get(k));
+            }
+        }
         int updated = 0;
         if (pathMap != null && pathMap.containsKey("id")) {
             Serializable id = convertId(pathMap.get("id").toString());
@@ -140,11 +144,6 @@ public abstract class BaseController<T, S extends BaseService<T>> extends BaseRO
             postUpdate(id, record);
         } else {
             record = preUpdate(qs, record);
-            if (Validator.notEmpty(pathMap)) {
-                for (String k : pathMap.keySet()) {
-                    updateFieldValue(record, k, pathMap.get(k));
-                }
-            }
             updated = getService().updateByMap(qs, record);
             postUpdate(qs, record);
         }
